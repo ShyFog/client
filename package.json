@@ -1,0 +1,17 @@
+{
+  "name": "client",
+  "version": "0.0.1",
+  "description": "Official browser client for ShyFog game.",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "keywords": [],
+  "author": "topcatto",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@babel/core": "^7.7.2",
+    "babel-preset-minify": "^0.5.2"
+  }
+}
