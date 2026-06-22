@@ -12,6 +12,7 @@
   "type": "commonjs",
   "devDependencies": {
     "@babel/core": "^7.7.2",
+    "adm-zip": "^0.5.17",
     "babel-preset-minify": "^0.5.2"
   }
 }
