@@ -205,6 +205,10 @@ function multiplayerMenu() {
             <div class="status">
               <img src="textures/gui/sprites/server_list/pinging_5.png" />
             </div>
+            <br />
+            <div class="actions">
+              <img class="delete" src="delete.png" />
+            </div>
           </div>
         </div>
       `).join("")}
@@ -222,10 +226,17 @@ function multiplayerMenu() {
   async function probeServer(index) {
     var server = game.servers[index];
     document.querySelector(`#server-${index}`).addEventListener("click", () => connectServer(server.address));
+    document.querySelector(`#server-${index} .meta .actions .delete`).addEventListener("click", event => {
+      event.stopPropagation();
+      game.servers.splice(index, 1);
+      localStorage.setItem("ShyFog_servers", JSON.stringify(game.servers));
+      multiplayerMenu();
+    });
     try {
       var url = new URL(`${location.protocol}//${server.address}`);
     } catch {
       document.querySelector(`#server-${index} .description`).innerText = "Can't resolve hostname";
+      document.querySelector(`#server-${index} .description`).style.color = "red";
       document.querySelector(`#server-${index} .status`).innerHTML = `<img src="textures/gui/sprites/server_list/unreachable.png" />`;
       return;
     }
@@ -245,7 +256,8 @@ function multiplayerMenu() {
         throw "";
       }
     } catch {
-      document.querySelector(`#server-${index} .description`).innerText = "No connection";
+      document.querySelector(`#server-${index} .description`).innerText = "Can't connect to server";
+      document.querySelector(`#server-${index} .description`).style.color = "red";
       document.querySelector(`#server-${index} .status`).innerHTML = `<img src="textures/gui/sprites/server_list/unreachable.png" />`;
       return;
     }
@@ -268,7 +280,7 @@ function addServerMenu() {
     <div class="button" id="cancel">Cancel</div>
   `;
   document.querySelector("#done").addEventListener("click", () => {
-    var name = document.querySelector("#name").value;
+    var name = (document.querySelector("#name").value || "ShyFog Server");
     var address = document.querySelector("#address").value;
     game.servers.push({ name, address });
     localStorage.setItem("ShyFog_servers", JSON.stringify(game.servers));
