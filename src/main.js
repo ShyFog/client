@@ -229,6 +229,9 @@ function multiplayerMenu() {
       document.querySelector(`#server-${index} .status`).innerHTML = `<img src="textures/gui/sprites/server_list/unreachable.png" />`;
       return;
     }
+    if (url.hostname == "localhost") {
+      url.protocol = "http:";
+    }
     if (!url.port) {
       url.port = 6280;
     }

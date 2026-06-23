@@ -115,6 +115,9 @@ function connectServer(address) {
     document.querySelector("#back").addEventListener("click", multiplayerMenu);
     return;
   }
+  if (url.hostname == "localhost") {
+    url.protocol = "ws:";
+  }
   if (!url.port) {
     url.port = 6280;
   }
