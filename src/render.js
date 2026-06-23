@@ -564,6 +564,18 @@ function render() {
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  // Hotbar
+  if (currentUserMetadata.gamemode != "spectator") {
+    var hotbarTexture = getTexture("/gui/sprites/hud/hotbar.png");
+    var hotbarSelectionTexture = getTexture("/gui/sprites/hud/hotbar_selection.png");
+    const hotbarScale = 0.5;
+    var hotbarRatio = (canvas.width * hotbarScale / hotbarTexture.width);
+    var hotbarHeight = hotbarTexture.height * hotbarRatio;
+    var slotWidth = 20 * hotbarRatio;
+    ctx.drawImage(hotbarTexture, canvas.width * ((1 - hotbarScale) / 2), canvas.height - hotbarHeight, canvas.width * hotbarScale, hotbarHeight);
+    ctx.drawImage(hotbarSelectionTexture, (canvas.width * ((1 - hotbarScale) / 2)) + (currentUserMetadata.selectedHotbarSlot * slotWidth) - 4, canvas.height - hotbarHeight - 4, slotWidth + 16, hotbarHeight);
+  }
+
   if (game.debugMode) {
     ctx.fillStyle = "#ff0000";
     var debugInfo =  [

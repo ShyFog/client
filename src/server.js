@@ -8,7 +8,8 @@ const PacketType = {
   "BLOCK_BREAK": 6,
   "USE": 7,
   "BLOCK_PLACE": 8,
-  "PLAYER_DISCONNECTED": 9
+  "PLAYER_DISCONNECTED": 9,
+  "HOTBAR_SWITCH": 10
 };
 
 function sendPacket(...packet) {
