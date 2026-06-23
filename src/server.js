@@ -120,7 +120,7 @@ function connectServer(address) {
     //url.port = 6280;
   }
   resetState();
-  game.remoteAddress = url.hostname;
+  game.remoteAddress = url.host;
   document.querySelector("#main-menu").innerHTML = `
     <font size="4">Connecting to server...</font>
   `;
