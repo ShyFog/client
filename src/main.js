@@ -235,7 +235,7 @@ async function proceed(type) {
       if (username.length > 20) {
         return proceedError("Username is too long.");
       }
-      if (!password || !!password.match(/^.+$/)) {
+      if (!password || !password.match(/^.+$/)) {
         return proceedError("Invalid password.");
       }
       if (password.length < 8) {
