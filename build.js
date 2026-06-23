@@ -15,7 +15,7 @@ const texturesUrl = "https://github.com/ShyFog/client/releases/download/textures
   // Bundle all files together
   var bundle = fs.readFileSync("src/main.js").toString("utf-8");
   for (var file of fs.readdirSync("src")) {
-    if (file == "main.js") {
+    if (file == "main.js" || file == ".DS_Store") {
       continue;
     }
     bundle += `\n${fs.readFileSync(`src/${file}`).toString("utf-8")}`;
