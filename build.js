@@ -6,7 +6,7 @@ const texturesUrl = "https://github.com/ShyFog/client/releases/download/textures
 
 (async () => {
   if (!fs.existsSync("public/textures")) {
-    fs.writeFileSync("textures.zip", await fetch(texturesUrl).then(res => res.arrayBuffer()));  
+    fs.writeFileSync("textures.zip", Buffer.from(await fetch(texturesUrl).then(res => res.arrayBuffer())));
     var zip = new admZip("textures.zip");
     zip.extractAllTo("public", true);  
     fs.unlinkSync("textures.zip");
