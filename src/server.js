@@ -117,6 +117,7 @@ function connectServer(address) {
   if (!url.port) {
     url.port = 6280;
   }
+  resetState();
   game.remoteAddress = url.hostname;
   document.querySelector("#main-menu").innerHTML = `
     <font size="4">Connecting to server...</font>
@@ -133,8 +134,7 @@ function connectServer(address) {
   });
   game.ws.addEventListener("message", handleServerPacket);
   game.ws.addEventListener("close", event => {
-    game.canvas = null;
-    game.context = null;
+    resetState();
     if (!document.querySelector("#main-menu")) {
       document.body.innerHTML = `
         <video id="panorama" src="panorama.mp4" autoplay muted loop playsinline></video>

@@ -23,6 +23,20 @@ window.game = {
   "coyoteTime": -Infinity
 };
 
+function resetState() {
+  game.canvas = null;
+  game.context = null;
+  game.chunks = {};
+  game.biomes = {};
+  game.worldMetadata = {};
+  game.playerMetadata = {};
+  game.holdingKeys = new Map;
+  game.debugMode = false;
+  game.debugModeChunks = false;
+  game.debugModeHitboxes = false;
+  game.times = [];
+}
+
 // Handle window resizing
 window.addEventListener("resize", () => {
   if (game.canvas) {
