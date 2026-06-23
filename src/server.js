@@ -105,7 +105,7 @@ async function handleServerPacket(message) {
 
 function connectServer(address) {
   try {
-    var url = new URL(`ws://${address}`);
+    var url = new URL(`ws${(location.protocol == "https:") ? "s" : ""}://${address}`);
   } catch {
     document.querySelector("#main-menu").innerHTML = `
       <font size="4">Invalid server address</font>
