@@ -7,7 +7,8 @@ const PacketType = {
   "MOVEMENT": 5,
   "BLOCK_BREAK": 6,
   "USE": 7,
-  "BLOCK_PLACE": 8
+  "BLOCK_PLACE": 8,
+  "PLAYER_DISCONNECTED": 9
 };
 
 function sendPacket(...packet) {
@@ -95,6 +96,9 @@ async function handleServerPacket(message) {
   }
   if (op == PacketType.BLOCK_PLACE) {
     game.chunks[`${data[0]},${data[1]},${data[2]}`].push(data[3]);
+  }
+  if (op == PacketType.PLAYER_DISCONNECTED) {
+    delete game.playerMetadata[data[0]];
   }
 }
 
