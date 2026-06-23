@@ -317,7 +317,7 @@ window.addEventListener("DOMContentLoaded", () => {
     } catch {}
   }
   document.body.innerHTML = `
-    <video id="panorama" src="panorama.mp4" autoplay muted loop playsinline></video>
+    <video id="panorama" src="panorama.mp4" autoplay muted loop playsinline disablepictureinpicture></video>
     <div id="main-menu"></div>
   `;
   if (!game.currentUser) {
