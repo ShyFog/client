@@ -556,6 +556,14 @@ function render() {
     }
   }
 
+  // Effect: A bit of dimming at the bottom
+  var g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  g.addColorStop(0, "rgba(0,0,0,0)");
+  g.addColorStop(0.72, "rgba(0,0,0,0)");
+  g.addColorStop(1, "rgba(0,0,0,1)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
   if (game.debugMode) {
     ctx.fillStyle = "#ff0000";
     var debugInfo =  [
