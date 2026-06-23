@@ -1,6 +1,7 @@
 window.game = {
   "version": "v0.0.1",
   "authServer": "https://shyfog-auth.topcatto8.workers.dev/api",
+  "captchaSiteKey": "6LePli8tAAAAABxR-Y8ZfzDCQORwxLSXzbMMKHAl",
   "blockSize": 32,
   "canvas": null,
   "context": null,
@@ -132,6 +133,8 @@ function registerMenu() {
     <input type="password" name="password" id="password" placeholder="Password..." required />
     <input type="password" name="password2" id="password2" placeholder="Repeat password..." required />
     <br />
+    <div id="captcha"></div>
+    <br />
     <div class="button" id="proceed">Register</div>
     <br />
     <br />
@@ -141,6 +144,9 @@ function registerMenu() {
   document.querySelector("#proceed").addEventListener("click", () => proceed("register"));
   document.querySelector("#login").addEventListener("click", loginMenu);
   document.querySelector("#offline").addEventListener("click", offlineMenu);
+  game.registerCaptchaId = grecaptcha.render(document.querySelector("#captcha"), {
+    "sitekey": game.captchaSiteKey
+  });
 }
 
 function offlineMenu() {
@@ -241,6 +247,7 @@ async function proceed(type) {
       var username = document.querySelector("#username").value;
       var password = document.querySelector("#password").value;
       var password2 = document.querySelector("#password2").value;
+      var captcha = grecaptcha.getResponse(game.registerCaptchaId);
       if (!email || !email.match(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
         return proceedError("Invalid email.");
       }
@@ -262,14 +269,18 @@ async function proceed(type) {
       if (password != password2) {
         return proceedError("Passwords do not match.");
       }
+      if (!captcha) {
+        return proceedError("CAPTCHA is not completed.");
+      }
       var result = await fetch(`${game.authServer}/register`, {
         "method": "POST",
         "headers": {
           "Content-Type": "application/json"
         },
-        "body": JSON.stringify({ email, username, password })
+        "body": JSON.stringify({ email, username, password, captcha })
       }).then(res => res.json());
       if (result.error) {
+        grecaptcha.reset(game.registerCaptchaId);
         return proceedError(result.error);
       }
       game.currentUser = {
