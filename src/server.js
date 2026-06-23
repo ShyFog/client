@@ -116,7 +116,8 @@ function connectServer(address) {
     return;
   }
   if (!url.port) {
-    url.port = 6280;
+    // TODO: Better server discovery
+    //url.port = 6280;
   }
   resetState();
   game.remoteAddress = url.hostname;
