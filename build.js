@@ -25,7 +25,7 @@ const texturesUrl = "https://github.com/ShyFog/client/releases/download/textures
   var minified = babel.transformSync(bundle, {
     "presets": ["minify"],
     "comments": false
-  }).code;
+  }).code.split("\n").join("\\n");
 
   for (var file of fs.readdirSync("lib")) {
     minified += `\n${fs.readFileSync(`lib/${file}`).toString("utf-8")}`;

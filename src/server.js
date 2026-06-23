@@ -112,7 +112,7 @@ function connectServer(address) {
       <br />
       <div class="button" id="back" style="width: 200px;">Back to Server List</div>
     `;
-    document.querySelector("#back").addEventListener("click", directConnectMenu);
+    document.querySelector("#back").addEventListener("click", multiplayerMenu);
     return;
   }
   if (!url.port) {
@@ -150,6 +150,6 @@ function connectServer(address) {
       <div class="button" id="back" style="width: 200px;">Back to Server List</div>
     `;
     document.querySelector("#reconnect").addEventListener("click", () => connectServer(address));
-    document.querySelector("#back").addEventListener("click", directConnectMenu);
+    document.querySelector("#back").addEventListener("click", multiplayerMenu);
   });
 }

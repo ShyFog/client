@@ -183,10 +183,92 @@ function mainMenu() {
     <br />
     <p style="margin: 0;">Logged in as <span id="skin-preview"><span class="skin-preview-layer" id="skin-preview-layer1"></span><span class="skin-preview-layer" id="skin-preview-layer2"></span><span class="skin-preview-layer" id="skin-preview-layer3"></span></span> <a>${game.currentUser.username.split("<").join("&lt;").split(">").join("&gt;")}</a>${game.currentUser.token ? "" : ` <img src="offline.png" width="20px" height="20px" style="vertical-align: middle; cursor: help; margin-bottom: 3px;" title="Offline" />`} <img src="logout.png" width="20px" height="20px" style="vertical-align: middle; cursor: pointer; margin-bottom: 3px;" id="logout" title="Logout" /></p>
   `;
-  document.querySelector("#multiplayer").addEventListener("click", directConnectMenu);
+  document.querySelector("#multiplayer").addEventListener("click", multiplayerMenu);
   document.querySelector("#skin-preview-layer2").style.backgroundImage = `url("${game.currentUser.skin}")`;
   document.querySelector("#skin-preview-layer3").style.backgroundImage = `url("${game.currentUser.skin}")`;
   document.querySelector("#logout").addEventListener("click", logout);
+}
+
+function multiplayerMenu() {
+  document.querySelector("#main-menu").innerHTML = `
+    <font size="6">Play Multiplayer</font>
+    <br />
+    <div id="server-list">
+      ${game.servers.map((server, index) => `
+        <div class="server" id="server-${index}">
+          <img class="icon" src="${server.cachedIcon || "textures/misc/unknown_server.png"}" />
+          <div class="main">
+            <div class="name">${server.name.split("<").join("&lt;").split(">").join("&gt;")}</div>
+            <div class="description">Pinging...</div>
+          </div>
+          <div class="meta">
+            <div class="status">
+              <img src="textures/gui/sprites/server_list/pinging_5.png" />
+            </div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+    <br />
+    <div class="button" id="add-server" style="width: 200px;">Add Server</div>
+    <div class="button" id="direct-connect" style="width: 200px;">Direct Connection</div>
+    <div class="button" id="refresh" style="width: 200px;">Refresh</div>
+    <div class="button" id="cancel" style="width: 200px;">Cancel</div>
+  `;
+  document.querySelector("#add-server").addEventListener("click", addServerMenu);
+  document.querySelector("#direct-connect").addEventListener("click", directConnectMenu);
+  document.querySelector("#refresh").addEventListener("click", multiplayerMenu);
+  document.querySelector("#cancel").addEventListener("click", mainMenu);
+  async function probeServer(index) {
+    var server = game.servers[index];
+    document.querySelector(`#server-${index}`).addEventListener("click", () => connectServer(server.address));
+    try {
+      var url = new URL(`${location.protocol}//${server.address}`);
+    } catch {
+      document.querySelector(`#server-${index} .description`).innerText = "Can't resolve hostname";
+      document.querySelector(`#server-${index} .status`).innerHTML = `<img src="textures/gui/sprites/server_list/unreachable.png" />`;
+      return;
+    }
+    try {
+      var pingResult = await fetch(`${url.toString()}api/shyfog/ping`);
+      if (!pingResult.ok) {
+        throw "";
+      }
+      pingResult = await pingResult.json();
+      if (!pingResult.success) {
+        throw "";
+      }
+    } catch {
+      document.querySelector(`#server-${index} .description`).innerText = "No connection";
+      document.querySelector(`#server-${index} .status`).innerHTML = `<img src="textures/gui/sprites/server_list/unreachable.png" />`;
+      return;
+    }
+    document.querySelector(`#server-${index} .description`).innerText = pingResult.motd;
+    document.querySelector(`#server-${index} .status`).innerHTML = `${pingResult.onlinePlayers} / ${pingResult.maxPlayers} <img src="textures/gui/sprites/server_list/ping_5.png" />`;
+  }
+  for (var index = 0; index < game.servers.length; index++) {
+    probeServer(index);
+  }
+}
+
+function addServerMenu() {
+  document.querySelector("#main-menu").innerHTML = `
+    <font size="6">Direct connect</font>
+    <br />
+    <input type="text" name="name" id="name" placeholder="Server name..." required />
+    <input type="text" name="address" id="address" placeholder="Server address..." required />
+    <br />
+    <div class="button" id="done">Done</div>
+    <div class="button" id="cancel">Cancel</div>
+  `;
+  document.querySelector("#done").addEventListener("click", () => {
+    var name = document.querySelector("#name").value;
+    var address = document.querySelector("#address").value;
+    game.servers.push({ name, address });
+    localStorage.setItem("ShyFog_servers", JSON.stringify(game.servers));
+    multiplayerMenu();
+  });
+  document.querySelector("#cancel").addEventListener("click", multiplayerMenu);
 }
 
 function directConnectMenu() {
@@ -199,7 +281,7 @@ function directConnectMenu() {
     <div class="button" id="cancel">Cancel</div>
   `;
   document.querySelector("#connect").addEventListener("click", () => connectServer(document.querySelector("#address").value));
-  document.querySelector("#cancel").addEventListener("click", mainMenu);
+  document.querySelector("#cancel").addEventListener("click", multiplayerMenu);
 }
 
 function logout() {
@@ -314,6 +396,12 @@ window.addEventListener("DOMContentLoaded", () => {
   if (localStorage.getItem("ShyFog_auth")) {
     try {
       game.currentUser = JSON.parse(localStorage.getItem("ShyFog_auth"));
+    } catch {}
+  }
+  game.servers = [];
+  if (localStorage.getItem("ShyFog_servers")) {
+    try {
+      game.servers = JSON.parse(localStorage.getItem("ShyFog_servers"));
     } catch {}
   }
   document.body.innerHTML = `
