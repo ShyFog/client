@@ -164,11 +164,11 @@ function mainMenu() {
     <div class="button disabled" id="settings" style="width: 200px;">Settings</div>
     <br />
     <br />
-    <p style="margin: 0;">Logged in as <span id="skin-preview"><span class="skin-preview-layer" id="skin-preview-layer1"></span><span class="skin-preview-layer" id="skin-preview-layer2"></span></span> <a>${game.currentUser.username.split("<").join("&lt;").split(">").join("&gt;")}</a>${game.currentUser.token ? "" : ` <img src="offline.png" width="20px" height="20px" style="vertical-align: middle; cursor: help; margin-bottom: 3px;" title="Offline" />`} <img src="logout.png" width="20px" height="20px" style="vertical-align: middle; cursor: pointer; margin-bottom: 3px;" id="logout" title="Logout" /></p>
+    <p style="margin: 0;">Logged in as <span id="skin-preview"><span class="skin-preview-layer" id="skin-preview-layer1"></span><span class="skin-preview-layer" id="skin-preview-layer2"></span><span class="skin-preview-layer" id="skin-preview-layer3"></span></span> <a>${game.currentUser.username.split("<").join("&lt;").split(">").join("&gt;")}</a>${game.currentUser.token ? "" : ` <img src="offline.png" width="20px" height="20px" style="vertical-align: middle; cursor: help; margin-bottom: 3px;" title="Offline" />`} <img src="logout.png" width="20px" height="20px" style="vertical-align: middle; cursor: pointer; margin-bottom: 3px;" id="logout" title="Logout" /></p>
   `;
   document.querySelector("#multiplayer").addEventListener("click", directConnectMenu);
-  document.querySelector("#skin-preview-layer1").style.backgroundImage = `url("${game.currentUser.skin}")`;
   document.querySelector("#skin-preview-layer2").style.backgroundImage = `url("${game.currentUser.skin}")`;
+  document.querySelector("#skin-preview-layer3").style.backgroundImage = `url("${game.currentUser.skin}")`;
   document.querySelector("#logout").addEventListener("click", logout);
 }
 

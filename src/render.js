@@ -459,6 +459,13 @@ function render() {
       ctx.drawImage(getTexture(`/skin/${username}`), 40, 8, 8, 8, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
       ctx.restore();
     } else if (game.playerMetadata[username].direction == "none") {
+      ctx.fillStyle = "#000000";
+      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+      ctx.fillRect(game.playerMetadata[username].x * blockSize + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 2, blockSize / 4 * 3);
+      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4 * 3) + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 2) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
       ctx.drawImage(getTexture(`/skin/${username}`), 8, 8, 8, 8, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
       ctx.drawImage(getTexture(`/skin/${username}`), 40, 8, 8, 8, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
       ctx.drawImage(getTexture(`/skin/${username}`), 44, 20, 4, 12, game.playerMetadata[username].x * blockSize + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
@@ -467,10 +474,18 @@ function render() {
       ctx.drawImage(getTexture(`/skin/${username}`), 4, 20, 4, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
       ctx.drawImage(getTexture(`/skin/${username}`), 20, 52, 4, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 2) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
     } else if (game.playerMetadata[username].direction == "left") {
+      ctx.fillStyle = "#000000";
+      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
       ctx.drawImage(getTexture(`/skin/${username}`), 16, 8, 8, 8, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
       ctx.drawImage(getTexture(`/skin/${username}`), 40, 52, 4, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
       ctx.drawImage(getTexture(`/skin/${username}`), 24, 52, 4, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
     } else if (game.playerMetadata[username].direction == "right") {
+      ctx.fillStyle = "#000000";
+      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
       ctx.drawImage(getTexture(`/skin/${username}`), 0, 8, 8, 8, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
       ctx.drawImage(getTexture(`/skin/${username}`), 40, 20, 4, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
       ctx.drawImage(getTexture(`/skin/${username}`), 0, 20, 4, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
