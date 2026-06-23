@@ -71,6 +71,10 @@ window.addEventListener("keydown", event => {
     game.debugModeHitboxes = !game.debugModeHitboxes;
     game.preventDebug = true;
   }
+  if (game.holdingKeys.get("F3") && event.code == "KeyT") {
+    game.texturesCache.clear();
+    game.preventDebug = true;
+  }
   game.holdingKeys.set(event.code, true);
 });
 
