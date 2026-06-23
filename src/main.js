@@ -61,8 +61,10 @@ window.addEventListener("keydown", event => {
   }
 
   if (["Digit1", "Digit2", "Digit3", "Digit4", "Digit5", "Digit6", "Digit7", "Digit8", "Digit9"].includes(event.code)) {
-    game.playerMetadata[game.currentUser.username].selectedHotbarSlot = (parseInt(event.code.slice(5)) - 1);
-    sendPacket(PacketType.HOTBAR_SWITCH, game.playerMetadata[game.currentUser.username].selectedHotbarSlot);
+    if (game.playerMetadata[game.currentUser.username]) {
+      game.playerMetadata[game.currentUser.username].selectedHotbarSlot = (parseInt(event.code.slice(5)) - 1);
+      sendPacket(PacketType.HOTBAR_SWITCH, game.playerMetadata[game.currentUser.username].selectedHotbarSlot);
+    }
   }
 
   // F3 debug keys
