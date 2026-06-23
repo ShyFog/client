@@ -57,6 +57,7 @@ registerSimpleSolidBlock("shyfog:grass_block", "/block/grass_block_side.png");
 registerSimpleSolidBlock("shyfog:bedrock", "/block/bedrock.png");
 registerSimpleSolidBlock("shyfog:sand", "/block/sand.png");
 registerSimpleSolidBlock("shyfog:sandstone", "/block/sandstone.png");
+registerSimpleSolidBlock("shyfog:obsidian", "/block/obsidian.png");
 
 // Grass
 registerGrass("shyfog:short_grass", "/block/short_grass.png");
@@ -79,3 +80,25 @@ registerFlower("shyfog:cornflower", "/block/cornflower.png");
 // Trees
 registerSimpleSolidBlock("shyfog:oak_log", "/block/oak_log.png");
 registerLeaves("shyfog:oak_leaves", "/block/oak_leaves.png");
+
+// Ores
+registerSimpleSolidBlock("shyfog:coal_ore", "/block/coal_ore.png");
+registerSimpleSolidBlock("shyfog:copper_ore", "/block/copper_ore.png");
+registerSimpleSolidBlock("shyfog:iron_ore", "/block/iron_ore.png");
+registerSimpleSolidBlock("shyfog:lapis_ore", "/block/lapis_ore.png");
+registerSimpleSolidBlock("shyfog:redstone_ore", "/block/redstone_ore.png");
+registerSimpleSolidBlock("shyfog:gold_ore", "/block/gold_ore.png");
+registerSimpleSolidBlock("shyfog:diamond_ore", "/block/diamond_ore.png");
+registerSimpleSolidBlock("shyfog:emerald_ore", "/block/emerald_ore.png");
+
+registerSimpleSolidBlock("shyfog:deepslate_coal_ore", "/block/deepslate_coal_ore.png");
+registerSimpleSolidBlock("shyfog:deepslate_copper_ore", "/block/deepslate_copper_ore.png");
+registerSimpleSolidBlock("shyfog:deepslate_iron_ore", "/block/deepslate_iron_ore.png");
+registerSimpleSolidBlock("shyfog:deepslate_lapis_ore", "/block/deepslate_lapis_ore.png");
+registerSimpleSolidBlock("shyfog:deepslate_redstone_ore", "/block/deepslate_redstone_ore.png");
+registerSimpleSolidBlock("shyfog:deepslate_gold_ore", "/block/deepslate_gold_ore.png");
+registerSimpleSolidBlock("shyfog:deepslate_diamond_ore", "/block/deepslate_diamond_ore.png");
+registerSimpleSolidBlock("shyfog:deepslate_emerald_ore", "/block/deepslate_emerald_ore.png");
+
+// Other
+registerSimpleSolidBlock("shyfog:cactus", "/block/cactus_side.png");
