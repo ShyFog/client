@@ -85,7 +85,7 @@ a {
   margin: 0;
 }
 
-#skin-preview {
+.skin-preview {
   position: relative;
   display: inline-block;
   width: 16px;
@@ -108,16 +108,25 @@ a {
   image-rendering: crisp-edges;
 }
 
-#skin-preview-layer1 {
+.skin-preview-layer1 {
   background-color: #000000;
 }
 
-#skin-preview-layer2 {
+.skin-preview-layer2 {
   background-position: -8px -8px;
 }
 
-#skin-preview-layer3 {
+.skin-preview-layer3 {
   background-position: -40px -8px;
+}
+
+.server .skin-preview {
+  width: 64px;
+  height: 64px;
+}
+
+.server .skin-preview-layer {
+  transform: scale(8);
 }
 
 #server-list {

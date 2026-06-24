@@ -181,12 +181,12 @@ function mainMenu() {
     <div class="button disabled" id="settings" style="width: 200px;">Settings</div>
     <br />
     <br />
-    <p style="margin: 0;">Logged in as <span id="skin-preview"><span class="skin-preview-layer" id="skin-preview-layer1"></span><span class="skin-preview-layer" id="skin-preview-layer2"></span><span class="skin-preview-layer" id="skin-preview-layer3"></span></span> <a>${game.currentUser.username.split("<").join("&lt;").split(">").join("&gt;")}</a>${game.currentUser.token ? "" : ` <img src="offline.png" width="20px" height="20px" style="vertical-align: middle; cursor: help; margin-bottom: 3px;" title="Offline" />`} <img src="logout.png" width="20px" height="20px" style="vertical-align: middle; cursor: pointer; margin-bottom: 3px;" id="logout" title="Logout" /></p>
+    <p style="margin: 0;">Logged in as <span class="skin-preview"><span class="skin-preview-layer skin-preview-layer1"></span><span class="skin-preview-layer skin-preview-layer2"></span><span class="skin-preview-layer skin-preview-layer3"></span></span> <a>${game.currentUser.username.split("<").join("&lt;").split(">").join("&gt;")}</a>${game.currentUser.token ? "" : ` <img src="offline.png" width="20px" height="20px" style="vertical-align: middle; cursor: help; margin-bottom: 3px;" title="Offline" />`} <img src="switch-user.png" width="20px" height="20px" style="vertical-align: middle; cursor: pointer; margin-bottom: 3px;" id="switch-user" title="Switch User" /></p>
   `;
   document.querySelector("#multiplayer").addEventListener("click", multiplayerMenu);
-  document.querySelector("#skin-preview-layer2").style.backgroundImage = `url("${game.currentUser.skin}")`;
-  document.querySelector("#skin-preview-layer3").style.backgroundImage = `url("${game.currentUser.skin}")`;
-  document.querySelector("#logout").addEventListener("click", logout);
+  document.querySelector(".skin-preview-layer2").style.backgroundImage = `url("${game.currentUser.skin}")`;
+  document.querySelector(".skin-preview-layer3").style.backgroundImage = `url("${game.currentUser.skin}")`;
+  document.querySelector("#switch-user").addEventListener("click", accountsMenu);
 }
 
 function multiplayerMenu() {
@@ -308,6 +308,66 @@ function directConnectMenu() {
   document.querySelector("#cancel").addEventListener("click", multiplayerMenu);
 }
 
+function accountsMenu() {
+  document.querySelector("#main-menu").innerHTML = `
+    <font size="6">Accounts</font>
+    <br />
+    <div id="server-list">
+      ${game.accounts.map((account, index) => `
+        <div class="server" id="server-${index}">
+          <span class="skin-preview">
+            <span class="skin-preview-layer skin-preview-layer1"></span>
+            <span class="skin-preview-layer skin-preview-layer2"></span>
+            <span class="skin-preview-layer skin-preview-layer3"></span>
+          </span>
+          <div class="main">
+            <div class="name">${account.username.split("<").join("&lt;").split(">").join("&gt;")}</div>
+          </div>
+          <div class="meta">
+            <br />
+            <br />
+            <div class="actions">
+              <img class="delete" src="logout.png" />
+            </div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+    <br />
+    <div class="button" id="add-account" style="width: 200px;">Add Account</div>
+    <div class="button" id="cancel" style="width: 200px;">Cancel</div>
+  `;
+  document.querySelector("#add-account").addEventListener("click", () => {
+    game.currentAccount = game.accounts.length;
+    localStorage.setItem("ShyFog_currentAccount", game.currentAccount.toString());
+    location.reload();
+  });
+  document.querySelector("#cancel").addEventListener("click", mainMenu);
+  function registerAccountEvents(index) {
+    var account = game.accounts[index];
+    document.querySelector(`#server-${index} .skin-preview-layer2`).style.backgroundImage = `url("${account.skin}")`;
+    document.querySelector(`#server-${index} .skin-preview-layer3`).style.backgroundImage = `url("${account.skin}")`;
+    document.querySelector(`#server-${index}`).addEventListener("click", () => {
+      game.currentAccount = index;
+      localStorage.setItem("ShyFog_currentAccount", game.currentAccount.toString());
+      location.reload();
+    });
+    document.querySelector(`#server-${index} .meta .actions .delete`).addEventListener("click", event => {
+      event.stopPropagation();
+      game.accounts.splice(index, 1);
+      if (game.currentAccount == index) {
+        game.currentAccount = 0;
+      }
+      localStorage.setItem("ShyFog_accounts", JSON.stringify(game.accounts));
+      localStorage.setItem("ShyFog_currentAccount", game.currentAccount.toString());
+      location.reload();
+    });
+  }
+  for (var index = 0; index < game.accounts.length; index++) {
+    registerAccountEvents(index);
+  }
+}
+
 function logout() {
   localStorage.removeItem("ShyFog_auth");
   location.reload();
@@ -411,17 +471,27 @@ async function proceed(type) {
       };
       break;
   }
-  localStorage.setItem("ShyFog_auth", JSON.stringify(game.currentUser));
+  game.accounts[game.currentAccount] = game.currentUser;
+  localStorage.setItem("ShyFog_accounts", JSON.stringify(game.accounts));
   mainMenu();
 }
 
 // The main entrypoint of the game once page loads
 window.addEventListener("DOMContentLoaded", () => {
-  if (localStorage.getItem("ShyFog_auth")) {
+  game.accounts = [];
+  game.currentAccount = 0;
+  if (localStorage.getItem("ShyFog_accounts")) {
     try {
-      game.currentUser = JSON.parse(localStorage.getItem("ShyFog_auth"));
+      game.accounts = JSON.parse(localStorage.getItem("ShyFog_accounts"));
     } catch {}
   }
+  if (localStorage.getItem("ShyFog_currentAccount")) {
+    game.currentAccount = parseInt(localStorage.getItem("ShyFog_currentAccount"));
+    if (isNaN(game.currentAccount)) {
+      game.currentAccount = 0;
+    }
+  }
+  game.currentUser = game.accounts[game.currentAccount];
   game.servers = [];
   if (localStorage.getItem("ShyFog_servers")) {
     try {
