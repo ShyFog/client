@@ -556,12 +556,20 @@ function render() {
     }
   }
 
-  // Effect: A bit of dimming at the bottom
+  // Vignette effect
   var g = ctx.createLinearGradient(0, 0, 0, canvas.height);
   g.addColorStop(0, "rgba(0,0,0,0)");
   g.addColorStop(0.72, "rgba(0,0,0,0)");
   g.addColorStop(1, "rgba(0,0,0,1)");
   ctx.fillStyle = g;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  var g2 = ctx.createRadialGradient(
+    canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.3,
+    canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) * 0.75
+  );
+  g2.addColorStop(0, "rgba(0,0,0,0)");
+  g2.addColorStop(0.9, "rgba(0,0,0,1)");
+  ctx.fillStyle = g2;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Hotbar
