@@ -661,7 +661,7 @@ function handleLeftClick(event) {
   var x = (event.clientX - cameraX) / game.blockSize;
   var y = -((event.clientY - cameraY) / game.blockSize) + 1;
   var z = Math.floor(currentUserMetadata.z);
-  if (currentUserMetadata.gamemode == "creative") {
+  if (currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "creative") {
     sendPacket(PacketType.BLOCK_BREAK, x, y, z);
   }
 }
@@ -674,7 +674,7 @@ function handleRightClick(event) {
   var x = (event.clientX - cameraX) / game.blockSize;
   var y = -((event.clientY - cameraY) / game.blockSize) + 1;
   var z = Math.floor(currentUserMetadata.z);
-  if (currentUserMetadata.gamemode == "creative") {
+  if (currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "creative") {
     sendPacket(PacketType.USE, x, y, z);
   }
 }
