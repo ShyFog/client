@@ -196,7 +196,7 @@ function multiplayerMenu() {
     <div id="server-list">
       ${game.servers.map((server, index) => `
         <div class="server" id="server-${index}">
-          <img class="icon" src="${server.cachedIcon || "textures/misc/unknown_server.png"}" />
+          <img class="icon" src="textures/misc/unknown_server.png" />
           <div class="main">
             <div class="name">${server.name.split("<").join("&lt;").split(">").join("&gt;")}</div>
             <div class="description">Pinging...</div>
@@ -225,6 +225,9 @@ function multiplayerMenu() {
   document.querySelector("#cancel").addEventListener("click", mainMenu);
   async function probeServer(index) {
     var server = game.servers[index];
+    if (server.cachedIcon) {
+      document.querySelector(`#server-${index} .icon`).src = server.cachedIcon;
+    }
     document.querySelector(`#server-${index}`).addEventListener("click", () => connectServer(server.address));
     document.querySelector(`#server-${index} .meta .actions .delete`).addEventListener("click", event => {
       event.stopPropagation();
@@ -265,7 +268,10 @@ function multiplayerMenu() {
       } catch {}
       return;
     }
+    server.cachedIcon = pingResult.icon;
+    localStorage.setItem("ShyFog_servers", JSON.stringify(game.servers));
     try {
+      document.querySelector(`#server-${index} .icon`).src = (server.cachedIcon || "textures/misc/unknown_server.png");
       document.querySelector(`#server-${index} .description`).innerText = pingResult.motd;
       document.querySelector(`#server-${index} .status`).innerHTML = `${pingResult.onlinePlayers} / ${pingResult.maxPlayers} <img src="textures/gui/sprites/server_list/ping_5.png" />`;
     } catch {}
