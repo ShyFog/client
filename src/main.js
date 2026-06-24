@@ -235,9 +235,11 @@ function multiplayerMenu() {
     try {
       var url = new URL(`${location.protocol}//${server.address}`);
     } catch {
-      document.querySelector(`#server-${index} .description`).innerText = "Can't resolve hostname";
-      document.querySelector(`#server-${index} .description`).style.color = "red";
-      document.querySelector(`#server-${index} .status`).innerHTML = `<img src="textures/gui/sprites/server_list/unreachable.png" />`;
+      try {
+        document.querySelector(`#server-${index} .description`).innerText = "Can't resolve hostname";
+        document.querySelector(`#server-${index} .description`).style.color = "red";
+        document.querySelector(`#server-${index} .status`).innerHTML = `<img src="textures/gui/sprites/server_list/unreachable.png" />`;
+      } catch {}
       return;
     }
     if (url.hostname == "localhost") {
@@ -256,13 +258,17 @@ function multiplayerMenu() {
         throw "";
       }
     } catch {
-      document.querySelector(`#server-${index} .description`).innerText = "Can't connect to server";
-      document.querySelector(`#server-${index} .description`).style.color = "red";
-      document.querySelector(`#server-${index} .status`).innerHTML = `<img src="textures/gui/sprites/server_list/unreachable.png" />`;
+      try {
+        document.querySelector(`#server-${index} .description`).innerText = "Can't connect to server";
+        document.querySelector(`#server-${index} .description`).style.color = "red";
+        document.querySelector(`#server-${index} .status`).innerHTML = `<img src="textures/gui/sprites/server_list/unreachable.png" />`;
+      } catch {}
       return;
     }
-    document.querySelector(`#server-${index} .description`).innerText = pingResult.motd;
-    document.querySelector(`#server-${index} .status`).innerHTML = `${pingResult.onlinePlayers} / ${pingResult.maxPlayers} <img src="textures/gui/sprites/server_list/ping_5.png" />`;
+    try {
+      document.querySelector(`#server-${index} .description`).innerText = pingResult.motd;
+      document.querySelector(`#server-${index} .status`).innerHTML = `${pingResult.onlinePlayers} / ${pingResult.maxPlayers} <img src="textures/gui/sprites/server_list/ping_5.png" />`;
+    } catch {}
   }
   for (var index = 0; index < game.servers.length; index++) {
     probeServer(index);
