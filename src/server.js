@@ -75,7 +75,12 @@ async function handleServerPacket(message) {
     });
   }
   if (op == PacketType.JOIN) {
-    document.body.innerHTML = `<canvas id="game" width="${window.innerWidth}px" height="${window.innerHeight}px">Your browser is unsupported for this game.</canvas>`;
+    document.body.innerHTML = `
+      <canvas id="game" width="${window.innerWidth}px" height="${window.innerHeight}px">Your browser is unsupported for this game.</canvas>
+      <div id="main-menu"></div>
+    `;
+    pauseMenu();
+    document.querySelector("#main-menu").style.display = "none";
     game.canvas = document.querySelector("#game");
     game.context = game.canvas.getContext("2d");
     game.canvas.addEventListener("click", handleLeftClick);

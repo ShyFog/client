@@ -60,6 +60,18 @@ window.addEventListener("keydown", event => {
     event.preventDefault();
   }
 
+  // Esc to pause/resume
+  if (game.canvas && game.context && event.code == "Escape") {
+    game.paused = !game.paused;
+    game.canvas.style.filter = (game.paused ? "blur(4px)" : "");
+    document.querySelector("#main-menu").style.display = (game.paused ? "flex" : "none");
+  }
+  if (game.paused) {
+    // Don't accept any keys while paused
+    return;
+  }
+
+  // Hotbar using digits
   if (["Digit1", "Digit2", "Digit3", "Digit4", "Digit5", "Digit6", "Digit7", "Digit8", "Digit9"].includes(event.code)) {
     if (game.currentUser && game.playerMetadata[game.currentUser.username]) {
       game.playerMetadata[game.currentUser.username].selectedHotbarSlot = (parseInt(event.code.slice(5)) - 1);
@@ -83,6 +95,7 @@ window.addEventListener("keydown", event => {
     game.texturesCache.clear();
     game.preventDebug = true;
   }
+
   game.holdingKeys.set(event.code, true);
 });
 
@@ -388,9 +401,20 @@ function accountsMenu() {
   }
 }
 
-function logout() {
-  localStorage.removeItem("ShyFog_auth");
-  location.reload();
+function pauseMenu() {
+  document.querySelector("#main-menu").innerHTML = `
+    <font size="6">Paused</font>
+    <br />
+    <div class="button" id="resume" style="width: 200px;">Resume</div>
+    <div class="button disabled" id="settings" style="width: 200px;">Settings</div>
+    <div class="button" id="leave" style="width: 200px;">Leave</div>
+  `;
+  document.querySelector("#resume").addEventListener("click", () => {
+    game.paused = false;
+    game.canvas.style.filter = "";
+    document.querySelector("#main-menu").style.display = "none";
+  });
+  document.querySelector("#leave").addEventListener("click", () => game.ws.close(1000, "Disconnected"));
 }
 
 function proceedError(text) {
