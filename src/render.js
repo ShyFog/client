@@ -452,6 +452,11 @@ function render() {
     if (!hasTexture(`/skin/${username}`)) {
       saveTexture(`/skin/${username}`, game.playerMetadata[username].skin);
     }
+    if (username != game.currentUser.username && game.playerMetadata[username].gamemode != "spectator") {
+      ctx.fillStyle = "#ffffff";
+      ctx.textAlign = "center";
+      ctx.fillText(username, (game.playerMetadata[username].x * blockSize) + (blockSize / 2) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize - (blockSize / 4) + cameraY);
+    }
     if (game.playerMetadata[username].gamemode == "spectator") {
       ctx.save();
       ctx.globalAlpha = 0.5;
@@ -511,6 +516,7 @@ function render() {
         if (!game.chunks[`${chunkX},${chunkY},${chunkZ}`]) {
           if (game.debugModeChunks && Math.floor(currentUserMetadata.z / 16) == chunkZ) {
             ctx.fillStyle = "#ff0000";
+            ctx.textAlign = "start";
             ctx.fillText("Waiting for server...", (((chunkX * 16) + 6) * blockSize) + cameraX, (((chunkY * -16) - 7) * blockSize) + cameraY);
           }
           continue;
@@ -590,6 +596,7 @@ function render() {
 
   if (game.debugMode) {
     ctx.fillStyle = "#ff0000";
+    ctx.textAlign = "start";
     var debugInfo =  [
       `FPS: ${game.times.length}`,
       `Current Player: ${game.currentUser.username}${game.currentUser.id ? ` (${game.currentUser.id})` : ""}`,
