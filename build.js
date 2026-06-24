@@ -15,13 +15,13 @@ const texturesUrl = "https://github.com/ShyFog/client/releases/download/textures
   // Bundle all files together
   var bundle = fs.readFileSync("src/main.js").toString("utf-8");
   for (var file of fs.readdirSync("src")) {
-    if (file == "main.js" || file == ".DS_Store") {
+    if (file == "main.js" || file.startsWith(".")) {
       continue;
     }
     bundle += `\n${fs.readFileSync(`src/${file}`).toString("utf-8")}`;
   }
   for (var file of fs.readdirSync("data")) {
-    if (file == ".DS_Store") {
+    if (file.startsWith(".")) {
       continue;
     }
     bundle += `\n${fs.readFileSync(`data/${file}`).toString("utf-8")}`;
@@ -34,7 +34,7 @@ const texturesUrl = "https://github.com/ShyFog/client/releases/download/textures
   }).code.split("\n").join("\\n");
 
   for (var file of fs.readdirSync("lib")) {
-    if (file == ".DS_Store") {
+    if (file.startsWith(".")) {
       continue;
     }
     minified += `\n${fs.readFileSync(`lib/${file}`).toString("utf-8")}`;
