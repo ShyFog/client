@@ -505,7 +505,7 @@ function render() {
   }
 
   // Render blocks in chunks around the player
-  for (var chunkZ = playerChunkZ - renderDistance; chunkZ <= playerChunkZ; chunkZ++) {
+  for (var chunkZ = playerChunkZ - 1; chunkZ <= playerChunkZ; chunkZ++) {
     for (var chunkX = playerChunkX - renderDistance; chunkX <= playerChunkX + renderDistance; chunkX++) {
       for (var chunkY = playerChunkY - renderDistance; chunkY <= playerChunkY + renderDistance; chunkY++) {
         if (!game.chunks[`${chunkX},${chunkY},${chunkZ}`]) {
@@ -515,8 +515,10 @@ function render() {
           }
           continue;
         }
-        ctx.save();
-        ctx.globalAlpha = (1 - (-(chunkZ - playerChunkZ) / 10));
+        if (chunkZ < playerChunkZ) {
+          ctx.save();
+          ctx.globalAlpha = 0.1;
+        }
         for (var block of game.chunks[`${chunkX},${chunkY},${chunkZ}`]) {
           if (!block) {
             continue;
@@ -541,7 +543,9 @@ function render() {
             ctx.drawImage(getTexture(texture.file), (((chunkX * 16) + block.x) * blockSize) + cameraX, (((chunkY * -16) - block.y) * blockSize) + cameraY, blockSize, blockSize);
           }
         }
-        ctx.restore();
+        if (chunkZ < playerChunkZ) {
+          ctx.restore();
+        }
         if (game.debugModeChunks && chunkZ == playerChunkZ) {
           ctx.strokeStyle = "#960000";
           ctx.beginPath();
