@@ -202,6 +202,9 @@ function render() {
             continue;
           }
           for (var hitbox of game.items[block.block].hitboxes) {
+            if (hitbox.type == "none") {
+              continue;
+            }
             for (var playerHitbox of currentUserMetadata.hitboxes) {
               if (collidesAABB({
                 "x": playerChunkPositionX.add(playerHitbox.x),
@@ -247,6 +250,9 @@ function render() {
             continue;
           }
           for (var hitbox of game.items[block.block].hitboxes) {
+            if (hitbox.type == "none") {
+              continue;
+            }
             for (var playerHitbox of currentUserMetadata.hitboxes) {
               if (collidesAABB({
                 "x": playerChunkPositionX.add(playerHitbox.x),
@@ -296,6 +302,9 @@ function render() {
             continue;
           }
           for (var hitbox of game.items[block.block].hitboxes) {
+            if (hitbox.type == "none") {
+              continue;
+            }
             for (var playerHitbox of currentUserMetadata.hitboxes) {
               if (collidesAABB({
                 "x": playerChunkPositionX.add(playerHitbox.x),
@@ -348,6 +357,9 @@ function render() {
             continue;
           }
           for (var hitbox of game.items[block.block].hitboxes) {
+            if (hitbox.type == "none") {
+              continue;
+            }
             for (var playerHitbox of currentUserMetadata.hitboxes) {
               if (collidesAABB({
                 "x": playerChunkPositionX.add(playerHitbox.x).sub(playerSpeed),
@@ -391,6 +403,9 @@ function render() {
             continue;
           }
           for (var hitbox of game.items[block.block].hitboxes) {
+            if (hitbox.type == "none") {
+              continue;
+            }
             for (var playerHitbox of currentUserMetadata.hitboxes) {
               if (collidesAABB({
                 "x": playerChunkPositionX.add(playerHitbox.x).add(playerSpeed),
