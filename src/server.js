@@ -36,6 +36,9 @@ async function handleServerPacket(message) {
       return;
     }
   } else {
+    if (message.data.startsWith("PONG")) {
+      game.measuredPing = (Date.now() - parseInt(message.data.slice(4)));
+    }
     try {
       msg = JSON.parse(`[${message.data}]`);
     } catch {
@@ -131,6 +134,7 @@ function connectServer(address) {
     document.querySelector("#main-menu").innerHTML = `
       <font size="4">Logging in...</font>
     `;
+    game.ws.send(`PING${Date.now()}`);
     sendPacket(PacketType.JOIN, {
       "version": game.version,
       "username": game.currentUser.username
@@ -155,3 +159,9 @@ function connectServer(address) {
     document.querySelector("#back").addEventListener("click", multiplayerMenu);
   });
 }
+
+setInterval(() => {
+  if (game.ws) {
+    game.ws.send(`PING${Date.now()}`);
+  }
+}, 5000);

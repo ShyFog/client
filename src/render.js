@@ -123,7 +123,6 @@ function render() {
   // Global settings
   ctx.imageSmoothingEnabled = false;
   ctx.lineWidth = 2;
-  ctx.font = `${game.blockSize * 0.46875}px sans-serif`;
 
   // Clear everything by rendering the sky
   ctx.fillStyle = (game.worldMetadata.skyColor || "#000000");
@@ -455,6 +454,7 @@ function render() {
     if (username != game.currentUser.username && game.playerMetadata[username].gamemode != "spectator") {
       ctx.fillStyle = "#ffffff";
       ctx.textAlign = "center";
+      ctx.font = "15px sans-serif";
       ctx.fillText(username, (game.playerMetadata[username].x * blockSize) + (blockSize / 2) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize - (blockSize / 4) + cameraY);
     }
     if (game.playerMetadata[username].gamemode == "spectator") {
@@ -517,6 +517,7 @@ function render() {
           if (game.debugModeChunks && Math.floor(currentUserMetadata.z / 16) == chunkZ) {
             ctx.fillStyle = "#ff0000";
             ctx.textAlign = "start";
+            ctx.font = "15px sans-serif";
             ctx.fillText("Waiting for server...", (((chunkX * 16) + 6) * blockSize) + cameraX, (((chunkY * -16) - 7) * blockSize) + cameraY);
           }
           continue;
@@ -592,13 +593,28 @@ function render() {
     var slotWidth = 20 * hotbarRatio;
     ctx.drawImage(hotbarTexture, canvas.width * ((1 - hotbarScale) / 2), canvas.height - hotbarHeight, canvas.width * hotbarScale, hotbarHeight);
     ctx.drawImage(hotbarSelectionTexture, (canvas.width * ((1 - hotbarScale) / 2)) + (currentUserMetadata.selectedHotbarSlot * slotWidth) - (1 * hotbarRatio), canvas.height - hotbarHeight - (1 * hotbarRatio), slotWidth + (4 * hotbarRatio), hotbarHeight);
+    for (var hotbarIndex = 0; hotbarIndex < 9; hotbarIndex++) {
+      var hotbarItem = currentUserMetadata.slots[`hotbar.${hotbarIndex}`];
+      if (hotbarItem) {
+        var texture = game.items[hotbarItem.item].texture({ biome });
+        ctx.drawImage(getTexture(texture.file), (canvas.width * ((1 - hotbarScale) / 2)) + (hotbarIndex * slotWidth) + (slotWidth / 4) + (slotWidth / 32) + (slotWidth / 64), canvas.height - hotbarHeight + (hotbarHeight / 4), hotbarHeight / 2, hotbarHeight / 2);
+        if (hotbarItem.count > 1) {
+          ctx.fillStyle = "#ffffff";
+          ctx.textAlign = "end";
+          ctx.font = "20px Arial";
+          ctx.fillText(hotbarItem.count.toString(), (canvas.width * ((1 - hotbarScale) / 2)) + (hotbarIndex * slotWidth) + (slotWidth / 4) + (slotWidth / 32) + (slotWidth / 64) + (hotbarHeight / 2), canvas.height - hotbarHeight + (hotbarHeight / 4) + (hotbarHeight / 2));
+        }
+      }
+    }
   }
 
   if (game.debugMode) {
     ctx.fillStyle = "#ff0000";
     ctx.textAlign = "start";
+    ctx.font = "15px sans-serif";
     var debugInfo =  [
       `FPS: ${game.times.length}`,
+      `Ping: ${game.measuredPing}ms`,
       `Current Player: ${game.currentUser.username}${game.currentUser.id ? ` (${game.currentUser.id})` : ""}`,
       `Position: (${currentUserMetadata.x}, ${currentUserMetadata.y}, ${currentUserMetadata.z})`,
       `Chunk: (${playerChunkX}, ${playerChunkY}, ${playerChunkZ})`,
@@ -613,6 +629,7 @@ function render() {
     if (game.worldMetadata.reducedDebugInfo) {
       debugInfo =  [
         `FPS: ${game.times.length}`,
+        `Ping: ${game.measuredPing}ms`,
         `Current Player: ${game.currentUser.username}${game.currentUser.id ? ` (${game.currentUser.id})` : ""}`,
         `Chunk Position: (${playerChunkPositionX}, ${playerChunkPositionY}, 0)`,
         `Gamemode: ${currentUserMetadata.gamemode}`,
