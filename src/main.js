@@ -310,7 +310,7 @@ function multiplayerMenu() {
 
 function addServerMenu() {
   document.querySelector("#main-menu").innerHTML = `
-    <font size="6">Direct connect</font>
+    <font size="6">Add Server</font>
     <br />
     <input type="text" name="name" id="name" placeholder="Server name..." required />
     <input type="text" name="address" id="address" placeholder="Server address..." required />
