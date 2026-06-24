@@ -591,7 +591,7 @@ function render() {
     var hotbarHeight = hotbarTexture.height * hotbarRatio;
     var slotWidth = 20 * hotbarRatio;
     ctx.drawImage(hotbarTexture, canvas.width * ((1 - hotbarScale) / 2), canvas.height - hotbarHeight, canvas.width * hotbarScale, hotbarHeight);
-    ctx.drawImage(hotbarSelectionTexture, (canvas.width * ((1 - hotbarScale) / 2)) + (currentUserMetadata.selectedHotbarSlot * slotWidth) - 4, canvas.height - hotbarHeight - 4, slotWidth + 16, hotbarHeight);
+    ctx.drawImage(hotbarSelectionTexture, (canvas.width * ((1 - hotbarScale) / 2)) + (currentUserMetadata.selectedHotbarSlot * slotWidth) - (1 * hotbarRatio), canvas.height - hotbarHeight - (1 * hotbarRatio), slotWidth + (4 * hotbarRatio), hotbarHeight);
   }
 
   if (game.debugMode) {
