@@ -601,8 +601,8 @@ function render() {
         if (hotbarItem.count > 1) {
           ctx.fillStyle = "#ffffff";
           ctx.textAlign = "end";
-          ctx.font = "20px Arial";
-          ctx.fillText(hotbarItem.count.toString(), (canvas.width * ((1 - hotbarScale) / 2)) + (hotbarIndex * slotWidth) + (slotWidth / 4) + (slotWidth / 32) + (slotWidth / 64) + (hotbarHeight / 2), canvas.height - hotbarHeight + (hotbarHeight / 4) + (hotbarHeight / 2));
+          ctx.font = "28px Arial";
+          ctx.fillText(hotbarItem.count.toString(), (canvas.width * ((1 - hotbarScale) / 2)) + (hotbarIndex * slotWidth) + (slotWidth / 4) + (slotWidth / 8) + (hotbarHeight / 2), canvas.height - hotbarHeight + (hotbarHeight / 4) + (hotbarHeight / 2));
         }
       }
     }
