@@ -103,6 +103,20 @@ window.addEventListener("mousemove", event => {
   game.cursorY = event.clientY;
 });
 
+window.addEventListener("wheel", event => {
+  var delta = Math.max(-1, Math.min(event.deltaY, 1));
+  if (game.currentUser && game.playerMetadata[game.currentUser.username]) {
+    game.playerMetadata[game.currentUser.username].selectedHotbarSlot += delta;
+    if (game.playerMetadata[game.currentUser.username].selectedHotbarSlot < 0) {
+      game.playerMetadata[game.currentUser.username].selectedHotbarSlot = 8;
+    }
+    if (game.playerMetadata[game.currentUser.username].selectedHotbarSlot > 8) {
+      game.playerMetadata[game.currentUser.username].selectedHotbarSlot = 0;
+    }
+    sendPacket(PacketType.HOTBAR_SWITCH, game.playerMetadata[game.currentUser.username].selectedHotbarSlot);
+  }
+});
+
 // Fix big delta time if the page was not visible for some time (for example, screenshots)
 window.addEventListener("visibilitychange", () => {
   if (document.visibilityState == "visible") {
