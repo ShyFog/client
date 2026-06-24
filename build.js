@@ -20,6 +20,12 @@ const texturesUrl = "https://github.com/ShyFog/client/releases/download/textures
     }
     bundle += `\n${fs.readFileSync(`src/${file}`).toString("utf-8")}`;
   }
+  for (var file of fs.readdirSync("data")) {
+    if (file == ".DS_Store") {
+      continue;
+    }
+    bundle += `\n${fs.readFileSync(`data/${file}`).toString("utf-8")}`;
+  }
 
   // Minify
   var minified = babel.transformSync(bundle, {
