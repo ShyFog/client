@@ -28,6 +28,9 @@ const texturesUrl = "https://github.com/ShyFog/client/releases/download/textures
   }).code.split("\n").join("\\n");
 
   for (var file of fs.readdirSync("lib")) {
+    if (file == ".DS_Store") {
+      continue;
+    }
     minified += `\n${fs.readFileSync(`lib/${file}`).toString("utf-8")}`;
   }
 
