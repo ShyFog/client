@@ -10,6 +10,7 @@ window.game = {
   "worldMetadata": {},
   "playerMetadata": {},
   "holdingKeys": new Map,
+  "hideOverlays": false,
   "debugMode": false,
   "debugModeChunks": false,
   "debugModeHitboxes": false,
@@ -82,6 +83,12 @@ window.addEventListener("keydown", event => {
       game.playerMetadata[game.currentUser.username].selectedHotbarSlot = (parseInt(event.code.slice(5)) - 1);
       sendPacket(PacketType.HOTBAR_SWITCH, game.playerMetadata[game.currentUser.username].selectedHotbarSlot);
     }
+  }
+
+  // F1 to hide overlays like hotbar
+  if (event.code == "F1") {
+    game.hideOverlays = !game.hideOverlays;
+    event.preventDefault();
   }
 
   // F3 debug keys

@@ -599,7 +599,7 @@ function render() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Hotbar
-  if (currentUserMetadata.gamemode != "spectator") {
+  if (!game.hideOverlays && currentUserMetadata.gamemode != "spectator") {
     var hotbarTexture = getTexture("/gui/sprites/hud/hotbar.png");
     var hotbarSelectionTexture = getTexture("/gui/sprites/hud/hotbar_selection.png");
     const hotbarScale = 0.5;
@@ -623,7 +623,7 @@ function render() {
     }
   }
 
-  if (game.debugMode) {
+  if (!game.hideOverlays && game.debugMode) {
     ctx.fillStyle = "#ff0000";
     ctx.textAlign = "start";
     ctx.font = "15px sans-serif";
