@@ -706,7 +706,7 @@ function handleRightClick(event) {
   if (!game.chunks[`${chunkX},${chunkY},${z}`]) {
     return;
   }
-  var blockId = game.chunks[`${chunkX},${chunkY},${z}`].findIndex(block => block && block.x == x && block.y == y);
+  var blockId = game.chunks[`${chunkX},${chunkY},${z}`].findIndex(block => block && block.x == newBlockX && block.y == newBlockY);
   if (blockId > -1) {
     return;
   }
