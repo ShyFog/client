@@ -473,12 +473,6 @@ function render() {
     if (!hasTexture(`/skin/${username}`)) {
       saveTexture(`/skin/${username}`, game.playerMetadata[username].skin);
     }
-    if (username != game.currentUser.username && game.playerMetadata[username].gamemode != "spectator") {
-      ctx.fillStyle = "#ffffff";
-      ctx.textAlign = "center";
-      ctx.font = "15px sans-serif";
-      ctx.fillText(username, (game.playerMetadata[username].x * blockSize) + (blockSize / 2) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize - (blockSize / 4) + cameraY);
-    }
     if (game.playerMetadata[username].gamemode == "spectator") {
       ctx.save();
       ctx.globalAlpha = 0.5;
@@ -586,6 +580,21 @@ function render() {
           ctx.stroke();
         }
       }
+    }
+  }
+
+  // Render player nametags
+  for (var username in game.playerMetadata) {
+    if (username != game.currentUser.username && game.playerMetadata[username].gamemode != "spectator") {
+      ctx.textAlign = "center";
+      ctx.font = "13px Arial";
+      ctx.fillStyle = "#000000";
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 2) + cameraX - (ctx.measureText(username).width / 2) - 4, (game.playerMetadata[username].y * -blockSize) - blockSize - (blockSize / 4) + cameraY - 12, ctx.measureText(username).width + 8, 15);
+      ctx.restore();
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(username, (game.playerMetadata[username].x * blockSize) + (blockSize / 2) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize - (blockSize / 4) + cameraY);
     }
   }
 
