@@ -146,6 +146,8 @@ window.addEventListener("wheel", event => {
 window.addEventListener("visibilitychange", () => {
   if (document.visibilityState == "visible") {
     game.prevFrame = performance.now();
+  } else {
+    game.paused = true;
   }
 });
 
