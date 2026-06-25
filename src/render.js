@@ -16,10 +16,14 @@ function bigToNumber(x) {
   return parseFloat(x.toString());
 }
 
-function collidesAABB(a, b, edge) {
+function collidesAABB(a, b, edgeX, edgeY) {
   var result = false;
-  if (edge) {
+  if (edgeX && edgeY) {
     result = a.x.lte(b.x.add(b.width)) && a.x.add(a.width).gte(b.x) && a.y.gte(b.y.sub(b.height)) && a.y.sub(a.height).lte(b.y);
+  } else if (edgeX) {
+    result = a.x.lte(b.x.add(b.width)) && a.x.add(a.width).gte(b.x) && a.y.gt(b.y.sub(b.height)) && a.y.sub(a.height).lt(b.y);
+  } else if (edgeY) {
+    result = a.x.lt(b.x.add(b.width)) && a.x.add(a.width).gt(b.x) && a.y.gte(b.y.sub(b.height)) && a.y.sub(a.height).lte(b.y);
   } else {
     result = a.x.lt(b.x.add(b.width)) && a.x.add(a.width).gt(b.x) && a.y.gt(b.y.sub(b.height)) && a.y.sub(a.height).lt(b.y);
   }
@@ -216,7 +220,7 @@ function render() {
                 "y": (new Big(chunkOffset[1] * 16)).add(block.y).add(hitbox.y).add(1),
                 "width": new Big(hitbox.width),
                 "height": new Big(hitbox.height)
-              }, true) == "bottom") {
+              }, false, true) == "bottom") {
                 game.onGround = true;
                 break hitboxsearch;
               }
