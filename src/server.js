@@ -88,10 +88,10 @@ async function handleServerPacket(message) {
     window.requestAnimationFrame(render);
   }
   if (op == PacketType.WORLD_METADATA) {
-    game.worldMetadata = data[0];
+    game.worldMetadata = Object.assign(game.worldMetadata, data[0]);
   }
   if (op == PacketType.PLAYER_METADATA) {
-    game.playerMetadata[data[0]] = data[1];
+    game.playerMetadata[data[0]] = Object.assign(game.playerMetadata[data[0]] || {}, data[1]);
     game.playerMetadata[data[0]].x = new Big(game.playerMetadata[data[0]].x);
     game.playerMetadata[data[0]].y = new Big(game.playerMetadata[data[0]].y);
     game.playerMetadata[data[0]].z = new Big(game.playerMetadata[data[0]].z);
