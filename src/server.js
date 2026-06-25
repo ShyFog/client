@@ -148,12 +148,10 @@ function connectServer(address) {
   game.ws.addEventListener("message", handleServerPacket);
   game.ws.addEventListener("close", event => {
     resetState();
-    if (!document.querySelector("#main-menu")) {
-      document.body.innerHTML = `
-        <video id="panorama" src="panorama.mp4" autoplay muted loop playsinline></video>
-        <div id="main-menu"></div>
-      `;
-    }
+    document.body.innerHTML = `
+      <video id="panorama" src="panorama.mp4" autoplay muted loop playsinline></video>
+      <div id="main-menu"></div>
+    `;
     document.querySelector("#main-menu").innerHTML = `
       <font size="4">${event.reason ? event.reason.split("<").join("&lt;").split(">").join("&gt;") : `Disconnected: ${event.code}`}</font>
       <br />
@@ -166,7 +164,7 @@ function connectServer(address) {
 }
 
 setInterval(() => {
-  if (game.ws) {
+  if (game.ws && game.ws.readyState == WebSocket.OPEN) {
     game.ws.send(`PING${Date.now()}`);
   }
 }, 5000);

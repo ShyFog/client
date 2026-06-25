@@ -36,6 +36,7 @@ function resetState() {
   game.debugModeChunks = false;
   game.debugModeHitboxes = false;
   game.times = [];
+  game.ws = null;
 }
 
 // Handle window resizing
