@@ -710,6 +710,12 @@ function handleRightClick(event) {
   if (!game.chunks[`${chunkX},${chunkY},${z}`]) {
     return;
   }
+  if (!game.worldMetadata.allowBuildingInVoid && (chunkY * 16) + newBlockY <= game.worldMetadata.voidY) {
+    return;
+  }
+  if (game.worldMetadata.worldHeight !== null && (chunkY * 16) + newBlockY > game.worldMetadata.worldHeight) {
+    return;
+  }
   var blockId = game.chunks[`${chunkX},${chunkY},${z}`].findIndex(block => block && block.x == newBlockX && block.y == newBlockY);
   if (blockId > -1) {
     return;
