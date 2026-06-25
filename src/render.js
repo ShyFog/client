@@ -697,11 +697,11 @@ function handleRightClick(event) {
   var chunkY = Math.floor(y / 16);
   var newBlockX = Math.floor(x) % 16;
   var newBlockY = Math.floor(y) % 16;
-  if (x < 0) {
-    x += 16;
+  if (newBlockX < 0) {
+    newBlockX += 16;
   }
-  if (y < 0) {
-    y += 16;
+  if (newBlockY < 0) {
+    newBlockY += 16;
   }
   if (!game.chunks[`${chunkX},${chunkY},${z}`]) {
     return;
