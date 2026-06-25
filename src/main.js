@@ -554,6 +554,9 @@ window.addEventListener("DOMContentLoaded", () => {
       game.servers = JSON.parse(localStorage.getItem("ShyFog_servers"));
     } catch {}
   }
+  document.body.addEventListener("contextmenu", event => {
+    event.preventDefault();
+  });
   document.body.innerHTML = `
     <video id="panorama" src="panorama.mp4" autoplay muted loop playsinline disablepictureinpicture></video>
     <p id="client-info">ShyFog Client ${game.version}</p>
