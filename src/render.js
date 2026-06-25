@@ -678,6 +678,9 @@ function render() {
 }
 
 function handleLeftClick(event) {
+  if (game.paused) {
+    return;
+  }
   var currentUserMetadata = game.playerMetadata[game.currentUser.username];
   var cameraX = (game.canvas.width / 2) - (currentUserMetadata.x * game.blockSize) - (game.blockSize / 2);
   var cameraY = (game.canvas.height / 2) - (currentUserMetadata.y * -game.blockSize) - game.blockSize;
@@ -691,6 +694,9 @@ function handleLeftClick(event) {
 }
 
 function handleRightClick(event) {
+  if (game.paused) {
+    return;
+  }
   event.preventDefault();
   var currentUserMetadata = game.playerMetadata[game.currentUser.username];
   var cameraX = (game.canvas.width / 2) - (currentUserMetadata.x * game.blockSize) - (game.blockSize / 2);
