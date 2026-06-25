@@ -146,8 +146,10 @@ window.addEventListener("wheel", event => {
 window.addEventListener("visibilitychange", () => {
   if (document.visibilityState == "visible") {
     game.prevFrame = performance.now();
-  } else {
+  } else if (game.canvas) {
     game.paused = true;
+    game.canvas.style.filter = "blur(4px)";
+    document.querySelector("#main-menu").style.display = "flex";
   }
 });
 
