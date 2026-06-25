@@ -676,9 +676,10 @@ function handleLeftClick(event) {
   var x = (event.clientX - cameraX) / game.blockSize;
   var y = -((event.clientY - cameraY) / game.blockSize) + 1;
   var z = Math.floor(currentUserMetadata.z);
-  if (currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "creative") {
-    sendPacket(PacketType.BLOCK_BREAK, x, y, z);
+  if (currentUserMetadata.gamemode != "survival" && currentUserMetadata.gamemode != "creative") {
+    return;
   }
+  sendPacket(PacketType.BLOCK_BREAK, x, y, z);
 }
 
 function handleRightClick(event) {
@@ -689,7 +690,42 @@ function handleRightClick(event) {
   var x = (event.clientX - cameraX) / game.blockSize;
   var y = -((event.clientY - cameraY) / game.blockSize) + 1;
   var z = Math.floor(currentUserMetadata.z);
-  if (currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "creative") {
-    sendPacket(PacketType.USE, x, y, z);
+  if (currentUserMetadata.gamemode != "survival" && currentUserMetadata.gamemode != "creative") {
+    return;
   }
+  var chunkX = Math.floor(x / 16);
+  var chunkY = Math.floor(y / 16);
+  var newBlockX = Math.floor(x) % 16;
+  var newBlockY = Math.floor(y) % 16;
+  if (x < 0) {
+    x += 16;
+  }
+  if (y < 0) {
+    y += 16;
+  }
+  if (!game.chunks[`${chunkX},${chunkY},${z}`]) {
+    return;
+  }
+  var blockId = game.chunks[`${chunkX},${chunkY},${z}`].findIndex(block => block && block.x == x && block.y == y);
+  if (blockId > -1) {
+    return;
+  }
+  if (!currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`]) {
+    return;
+  }
+  if (!game.items[currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item].placeable) {
+    return;
+  }
+  var newBlock = {
+    "block": currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item,
+    "x": newBlockX,
+    "y": newBlockY
+  };
+  game.chunks[`${chunkX},${chunkY},${z}`].push(newBlock);
+  if (currentUserMetadata.gamemode != "creative") {
+    if (--currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].count < 1) {
+      currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`] = null;
+    }
+  }
+  sendPacket(PacketType.USE, x, y, z);
 }

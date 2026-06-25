@@ -92,7 +92,7 @@ async function handleServerPacket(message) {
   }
   if (op == PacketType.PLAYER_METADATA) {
     game.playerMetadata[data[0]] = Object.assign(game.playerMetadata[data[0]] || {}, data[1]);
-    if (typeof data[1].x === string || typeof data[1].y === string || typeof data[1].z === string) {
+    if (typeof data[1].x === "string" || typeof data[1].y === "string" || typeof data[1].z === "string") {
       game.playerMetadata[data[0]].x = new Big(game.playerMetadata[data[0]].x);
       game.playerMetadata[data[0]].y = new Big(game.playerMetadata[data[0]].y);
       game.playerMetadata[data[0]].z = new Big(game.playerMetadata[data[0]].z);
