@@ -67,6 +67,14 @@ a {
   filter: blur(4px);
 }
 
+#client-info {
+  position: fixed;
+  left: 15px;
+  bottom: 0;
+  color: #ffffff;
+  font-family: Arial;
+}
+
 #main-menu {
   display: flex;
   flex-direction: column;

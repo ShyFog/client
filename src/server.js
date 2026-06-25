@@ -75,6 +75,8 @@ async function handleServerPacket(message) {
     });
   }
   if (op == PacketType.JOIN) {
+    game.serverSoftware = data[0].software;
+    game.serverVersion = data[0].version;
     document.body.innerHTML = `
       <canvas id="game" width="${window.innerWidth}px" height="${window.innerHeight}px">Your browser is unsupported for this game.</canvas>
       <div id="main-menu"></div>
@@ -152,6 +154,7 @@ function connectServer(address) {
     resetState();
     document.body.innerHTML = `
       <video id="panorama" src="panorama.mp4" autoplay muted loop playsinline></video>
+      <p id="client-info">ShyFog Client ${game.version}</p>
       <div id="main-menu"></div>
     `;
     document.querySelector("#main-menu").innerHTML = `

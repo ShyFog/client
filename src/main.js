@@ -21,7 +21,9 @@ window.game = {
   "cursorY": 0,
   "preventDebug": false,
   "lastJump": -Infinity,
-  "coyoteTime": -Infinity
+  "coyoteTime": -Infinity,
+  "serverSoftware": "",
+  "serverVersion": ""
 };
 
 function resetState() {
@@ -37,6 +39,8 @@ function resetState() {
   game.debugModeHitboxes = false;
   game.times = [];
   game.ws = null;
+  game.serverSoftware = "";
+  game.serverVersion = "";
 }
 
 // Handle window resizing
@@ -545,6 +549,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
   document.body.innerHTML = `
     <video id="panorama" src="panorama.mp4" autoplay muted loop playsinline disablepictureinpicture></video>
+    <p id="client-info">ShyFog Client ${game.version}</p>
     <div id="main-menu"></div>
   `;
   if (!game.currentUser) {

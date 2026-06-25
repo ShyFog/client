@@ -628,6 +628,8 @@ function render() {
     ctx.textAlign = "start";
     ctx.font = "15px sans-serif";
     var debugInfo =  [
+      `ShyFog ${game.version}`,
+      `Server Software: ${game.serverSoftware} ${game.serverVersion}`,
       `FPS: ${game.times.length}`,
       `Ping: ${game.measuredPing}ms`,
       `Current Player: ${game.currentUser.username}${game.currentUser.id ? ` (${game.currentUser.id})` : ""}`,
@@ -643,6 +645,8 @@ function render() {
     ];
     if (game.worldMetadata.reducedDebugInfo) {
       debugInfo =  [
+        `ShyFog ${game.version}`,
+        `Server Software: ${game.serverSoftware} ${game.serverVersion}`,
         `FPS: ${game.times.length}`,
         `Ping: ${game.measuredPing}ms`,
         `Current Player: ${game.currentUser.username}${game.currentUser.id ? ` (${game.currentUser.id})` : ""}`,
