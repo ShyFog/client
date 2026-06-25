@@ -4,7 +4,7 @@
 # Download v0.0.3 client to shyfog-client folder
 git clone --recurse-submodules -b v0.0.3 https://github.com/ShyFog/client.git shyfog-client
 
-# Install and build the client
+# Install modules and build the client
 cd shyfog-client
 npm install
 npm run build
