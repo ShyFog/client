@@ -129,6 +129,9 @@ window.addEventListener("mousemove", event => {
 });
 
 window.addEventListener("wheel", event => {
+  if (game.paused) {
+    return;
+  }
   var delta = Math.max(-1, Math.min(event.deltaY, 1));
   if (game.currentUser && game.playerMetadata[game.currentUser.username]) {
     game.playerMetadata[game.currentUser.username].selectedHotbarSlot += delta;
