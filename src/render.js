@@ -511,7 +511,7 @@ function render() {
       ctx.drawImage(getTexture(`/skin/${username}`), 40, 20, 4, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
       ctx.drawImage(getTexture(`/skin/${username}`), 0, 20, 4, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
     }
-    if (game.debugModeHitboxes) {
+    if (game.debugModeHitboxes && !game.worldMetadata.reducedDebugInfo) {
       ctx.strokeStyle = "#ffffff";
       for (var hitbox of game.playerMetadata[username].hitboxes) {
         ctx.beginPath();
