@@ -656,7 +656,8 @@ function render() {
       `Gamemode: ${currentUserMetadata.gamemode}`,
       `Block size: ${blockSize}`,
       `Cursor: (${game.cursorX}, ${game.cursorY})`,
-      `Block Cursor: (${(game.cursorX - cameraX) / blockSize}, ${-((game.cursorY - cameraY) / blockSize) + 1}, ${Math.floor(currentUserMetadata.z)})`,
+      `Block Cursor (Float): (${(game.cursorX - cameraX) / blockSize}, ${-((game.cursorY - cameraY) / blockSize) + 1}, ${Math.floor(currentUserMetadata.z)})`,
+      `Block Cursor (Int): (${Math.floor((game.cursorX - cameraX) / blockSize)}, ${Math.floor(-((game.cursorY - cameraY) / blockSize) + 1)}, ${Math.floor(currentUserMetadata.z)})`,
       `Biome: ${biome}`
     ];
     if (game.worldMetadata.reducedDebugInfo) {
