@@ -639,6 +639,31 @@ function render() {
     }
   }
 
+  var blockCursorX = (game.cursorX - cameraX) / blockSize;
+  var blockCursorY = -((game.cursorY - cameraY) / blockSize) + 1;
+  var blockCursorChunkX = Math.floor(blockCursorX / 16);
+  var blockCursorChunkY = Math.floor(blockCursorY / 16);
+  var blockCursorRelativeX = Math.floor(blockCursorX) % 16;
+  var blockCursorRelativeY = Math.floor(blockCursorY) % 16;
+  if (blockCursorRelativeX < 0) {
+    blockCursorRelativeX += 16;
+  }
+  if (blockCursorRelativeY < 0) {
+    blockCursorRelativeY += 16;
+  }
+  if (game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`]) {
+    var blockId = game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`].findIndex(block => block && block.x == blockCursorRelativeX && block.y == blockCursorRelativeY);
+    // Using Pythogorean theorem to check if the block is in player's range
+    if (blockId > -1 && (currentUserMetadata.maximumRange == "Infinity" || currentUserMetadata.x.add(new Big("0.5")).sub(new Big(blockCursorX)).pow(2).add(currentUserMetadata.y.add(new Big("1")).sub(new Big(blockCursorY)).pow(2)).sqrt().lte(new Big(currentUserMetadata.maximumRange)))) {
+      // Block border at cursor
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 0.2;
+      for (var i = 0; i < 2; i++) {
+        ctx.strokeRect((Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
+      }
+    }
+  }
+
   if (!game.hideOverlays && game.debugMode) {
     ctx.fillStyle = "#ff0000";
     ctx.textAlign = "start";
@@ -656,8 +681,8 @@ function render() {
       `Gamemode: ${currentUserMetadata.gamemode}`,
       `Block Size: ${blockSize}`,
       `Cursor: (${game.cursorX}, ${game.cursorY})`,
-      `Block Cursor (Float): (${(game.cursorX - cameraX) / blockSize}, ${-((game.cursorY - cameraY) / blockSize) + 1}, ${Math.floor(currentUserMetadata.z)})`,
-      `Block Cursor (Int): (${Math.floor((game.cursorX - cameraX) / blockSize)}, ${Math.floor(-((game.cursorY - cameraY) / blockSize) + 1)}, ${Math.floor(currentUserMetadata.z)})`,
+      `Block Cursor (Float): (${blockCursorX}, ${blockCursorY}, ${Math.floor(currentUserMetadata.z)})`,
+      `Block Cursor (Int): (${Math.floor(blockCursorX)}, ${Math.floor(blockCursorY)}, ${Math.floor(currentUserMetadata.z)})`,
       `Biome: ${biome}`
     ];
     if (game.worldMetadata.reducedDebugInfo) {
@@ -703,6 +728,9 @@ function handleLeftClick(event) {
   if (currentUserMetadata.gamemode != "survival" && currentUserMetadata.gamemode != "creative") {
     return;
   }
+  if (currentUserMetadata.maximumRange != "Infinity" && currentUserMetadata.x.add(new Big("0.5")).sub(new Big(x)).pow(2).add(currentUserMetadata.y.add(new Big("1")).sub(new Big(y)).pow(2)).sqrt().gt(new Big(currentUserMetadata.maximumRange))) {
+    return;
+  }
   sendPacket(PacketType.BLOCK_BREAK, x, y, z);
 }
 
@@ -718,6 +746,9 @@ function handleRightClick(event) {
   var y = -((event.clientY - cameraY) / game.blockSize) + 1;
   var z = Math.floor(currentUserMetadata.z);
   if (currentUserMetadata.gamemode != "survival" && currentUserMetadata.gamemode != "creative") {
+    return;
+  }
+  if (currentUserMetadata.maximumRange != "Infinity" && currentUserMetadata.x.add(new Big("0.5")).sub(new Big(x)).pow(2).add(currentUserMetadata.y.add(new Big("1")).sub(new Big(y)).pow(2)).sqrt().gt(new Big(currentUserMetadata.maximumRange))) {
     return;
   }
   var chunkX = Math.floor(x / 16);
