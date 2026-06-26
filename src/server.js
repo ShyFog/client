@@ -9,7 +9,8 @@ const PacketType = {
   "USE": 7,
   "BLOCK_PLACE": 8,
   "PLAYER_DISCONNECTED": 9,
-  "HOTBAR_SWITCH": 10
+  "HOTBAR_SWITCH": 10,
+  "SERVER_TRANSFER": 11
 };
 
 function sendPacket(...packet) {
@@ -112,6 +113,10 @@ async function handleServerPacket(message) {
   }
   if (op == PacketType.PLAYER_DISCONNECTED) {
     delete game.playerMetadata[data[0]];
+  }
+  if (op == PacketType.SERVER_TRANSFER) {
+    game.ws.close(1000, "Disconnected");
+    connectServer(data[0], data[1]);
   }
 }
 
