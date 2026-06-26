@@ -285,6 +285,11 @@ input:-webkit-autofill:active {
   caret-color: #ffffff;
 }
 
+input[type=checkbox] {
+  accent-color: #000000;
+  cursor: pointer;
+}
+
 /* Buttons */
 .button {
   background-color: #000000;

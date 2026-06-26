@@ -271,7 +271,7 @@ function multiplayerMenu() {
     if (server.cachedIcon) {
       document.querySelector(`#server-${index} .icon`).src = server.cachedIcon;
     }
-    document.querySelector(`#server-${index}`).addEventListener("click", () => connectServer(server.address));
+    document.querySelector(`#server-${index}`).addEventListener("click", () => connectServer(server.address, server.forceSSL));
     document.querySelector(`#server-${index} .meta .actions .delete`).addEventListener("click", event => {
       event.stopPropagation();
       game.servers.splice(index, 1);
@@ -279,7 +279,7 @@ function multiplayerMenu() {
       multiplayerMenu();
     });
     try {
-      var url = new URL(`${location.protocol}//${server.address}`);
+      var url = new URL(`${server.forceSSL ? "https:" : location.protocol}//${server.address}`);
     } catch {
       try {
         document.querySelector(`#server-${index} .description`).innerText = "Can't resolve hostname";
@@ -330,6 +330,10 @@ function addServerMenu() {
     <br />
     <input type="text" name="name" id="name" placeholder="Server name..." required />
     <input type="text" name="address" id="address" placeholder="Server address..." required />
+    ${location.protocol == "http:" ? `
+      <br />
+      <label><input type="checkbox" name="force-ssl" id="force-ssl"> Force SSL</label>
+    ` : ""}
     <br />
     <div class="button" id="done">Done</div>
     <div class="button" id="cancel">Cancel</div>
@@ -337,7 +341,10 @@ function addServerMenu() {
   document.querySelector("#done").addEventListener("click", () => {
     var name = (document.querySelector("#name").value || "ShyFog Server");
     var address = document.querySelector("#address").value;
-    game.servers.push({ name, address });
+    var forceSSL = document.querySelector("#force-ssl") ? document.querySelector("#force-ssl").checked : false;
+    game.servers.push({
+      name, address, forceSSL
+    });
     localStorage.setItem("ShyFog_servers", JSON.stringify(game.servers));
     multiplayerMenu();
   });

@@ -115,9 +115,9 @@ async function handleServerPacket(message) {
   }
 }
 
-function connectServer(address) {
+function connectServer(address, forceSSL) {
   try {
-    var url = new URL(`ws${(location.protocol == "https:") ? "s" : ""}://${address}`);
+    var url = new URL(`ws${(forceSSL || location.protocol == "https:") ? "s" : ""}://${address}`);
   } catch {
     document.querySelector("#main-menu").innerHTML = `
       <font size="4">Invalid server address</font>
