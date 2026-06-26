@@ -651,15 +651,45 @@ function render() {
   if (blockCursorRelativeY < 0) {
     blockCursorRelativeY += 16;
   }
-  if (game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`]) {
+  if (game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`] && (currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "creative")) {
     var blockId = game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`].findIndex(block => block && block.x == blockCursorRelativeX && block.y == blockCursorRelativeY);
     // Using Pythogorean theorem to check if the block is in player's range
     if (blockId > -1 && (currentUserMetadata.maximumRange == "Infinity" || currentUserMetadata.x.add(new Big("0.5")).sub(new Big(blockCursorX)).pow(2).add(currentUserMetadata.y.add(new Big("1")).sub(new Big(blockCursorY)).pow(2)).sqrt().lte(new Big(currentUserMetadata.maximumRange)))) {
+      var block = game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`][blockId];
+
       // Block border at cursor
       ctx.strokeStyle = "#000000";
       ctx.lineWidth = 0.2;
       for (var i = 0; i < 2; i++) {
         ctx.strokeRect((Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
+      }
+      if (game.breakingBlock) {
+        if (currentUserMetadata.gamemode == "creative") {
+          game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`][blockId] = null;
+          sendPacket(PacketType.BLOCK_BREAK, blockCursorX, blockCursorY, bigToNumber(currentUserMetadata.z));
+        } else {
+          var now = performance.now();
+          if (game.breakingBlockCache.x != Math.floor(blockCursorX) || game.breakingBlockCache.y != Math.floor(blockCursorY) || game.breakingBlockCache.z != bigToNumber(currentUserMetadata.z)) {
+            game.breakingBlockCache = {
+              "x": Math.floor(blockCursorX),
+              "y": Math.floor(blockCursorY),
+              "z": bigToNumber(currentUserMetadata.z)
+            };
+            game.breakingBlockTicks = 0;
+          } else if (now - game.lastTick >= 30) {
+            game.lastTick = now - ((now - game.lastTick) % 30);
+            game.breakingBlockTicks++;
+          }
+          if (game.items[block.block].hardness == -1) {
+            ctx.drawImage(getTexture("/block/destroy_stage_0.png"), (Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
+          } else {
+            if (game.breakingBlockTicks >= game.items[block.block].hardness * 100) {
+              game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`][blockId] = null;
+              sendPacket(PacketType.BLOCK_BREAK, blockCursorX, blockCursorY, bigToNumber(currentUserMetadata.z));
+            }
+            ctx.drawImage(getTexture(`/block/destroy_stage_${Math.round(Math.min(game.breakingBlockTicks, game.items[block.block].hardness * 100) / (game.items[block.block].hardness * 100) * 9)}.png`), (Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
+          }
+        }
       }
     }
   }
@@ -715,23 +745,16 @@ function render() {
   });
 }
 
-function handleLeftClick(event) {
+function handleMousedown() {
   if (game.paused) {
     return;
   }
-  var currentUserMetadata = game.playerMetadata[game.currentUser.username];
-  var cameraX = (game.canvas.width / 2) - (currentUserMetadata.x * game.blockSize) - (game.blockSize / 2);
-  var cameraY = (game.canvas.height / 2) - (currentUserMetadata.y * -game.blockSize) - game.blockSize;
-  var x = (event.clientX - cameraX) / game.blockSize;
-  var y = -((event.clientY - cameraY) / game.blockSize) + 1;
-  var z = Math.floor(currentUserMetadata.z);
-  if (currentUserMetadata.gamemode != "survival" && currentUserMetadata.gamemode != "creative") {
-    return;
-  }
-  if (currentUserMetadata.maximumRange != "Infinity" && currentUserMetadata.x.add(new Big("0.5")).sub(new Big(x)).pow(2).add(currentUserMetadata.y.add(new Big("1")).sub(new Big(y)).pow(2)).sqrt().gt(new Big(currentUserMetadata.maximumRange))) {
-    return;
-  }
-  sendPacket(PacketType.BLOCK_BREAK, x, y, z);
+  game.breakingBlock = true;
+  game.breakingBlockTicks = 0;
+}
+
+function handleMouseup() {
+  game.breakingBlock = false;
 }
 
 function handleRightClick(event) {

@@ -86,7 +86,8 @@ async function handleServerPacket(message) {
     document.querySelector("#main-menu").style.display = "none";
     game.canvas = document.querySelector("#game");
     game.context = game.canvas.getContext("2d");
-    game.canvas.addEventListener("click", handleLeftClick);
+    game.canvas.addEventListener("mousedown", handleMousedown);
+    game.canvas.addEventListener("mouseup", handleMouseup);
     game.canvas.addEventListener("contextmenu", handleRightClick);
     window.requestAnimationFrame(render);
   }

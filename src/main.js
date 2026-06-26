@@ -24,7 +24,11 @@ window.game = {
   "lastJump": -Infinity,
   "coyoteTime": -Infinity,
   "serverSoftware": "",
-  "serverVersion": ""
+  "serverVersion": "",
+  "breakingBlock": false,
+  "breakingBlockCache": {},
+  "breakingBlockTicks": 0,
+  "lastTick": 0
 };
 
 function resetState() {
