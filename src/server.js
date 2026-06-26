@@ -115,6 +115,7 @@ async function handleServerPacket(message) {
     delete game.playerMetadata[data[0]];
   }
   if (op == PacketType.SERVER_TRANSFER) {
+    game.serverTransferInProgress = true;
     game.ws.close(1000, "Disconnected");
     connectServer(data[0], data[1]);
   }
@@ -156,6 +157,10 @@ function connectServer(address, forceSSL) {
   });
   game.ws.addEventListener("message", handleServerPacket);
   game.ws.addEventListener("close", event => {
+    if (game.serverTransferInProgress) {
+      game.serverTransferInProgress = false;
+      return;
+    }
     resetState();
     document.body.innerHTML = `
       <video id="panorama" src="panorama.mp4" autoplay muted loop playsinline></video>
