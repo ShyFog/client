@@ -654,7 +654,7 @@ function render() {
       `Chunk Position: (${playerChunkPositionX}, ${playerChunkPositionY}, 0)`,
       `Camera: (${cameraX}, ${cameraY})`,
       `Gamemode: ${currentUserMetadata.gamemode}`,
-      `Block size: ${blockSize}`,
+      `Block Size: ${blockSize}`,
       `Cursor: (${game.cursorX}, ${game.cursorY})`,
       `Block Cursor (Float): (${(game.cursorX - cameraX) / blockSize}, ${-((game.cursorY - cameraY) / blockSize) + 1}, ${Math.floor(currentUserMetadata.z)})`,
       `Block Cursor (Int): (${Math.floor((game.cursorX - cameraX) / blockSize)}, ${Math.floor(-((game.cursorY - cameraY) / blockSize) + 1)}, ${Math.floor(currentUserMetadata.z)})`,
@@ -669,7 +669,7 @@ function render() {
         `Current Player: ${game.currentUser.username}${game.currentUser.id ? ` (${game.currentUser.id})` : ""}`,
         `Chunk Position: (${playerChunkPositionX}, ${playerChunkPositionY}, 0)`,
         `Gamemode: ${currentUserMetadata.gamemode}`,
-        `Block size: ${blockSize}`,
+        `Block Size: ${blockSize}`,
         `Cursor: (${game.cursorX}, ${game.cursorY})`
       ];
     }
