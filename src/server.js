@@ -158,7 +158,7 @@ function connectServer(address, forceSSL) {
       <div id="main-menu"></div>
     `;
     document.querySelector("#main-menu").innerHTML = `
-      <font size="4">${event.reason ? event.reason.split("<").join("&lt;").split(">").join("&gt;") : `Disconnected: ${event.code}`}</font>
+      <font size="4" style="text-align: center;">${event.reason ? event.reason.split("<").join("&lt;").split(">").join("&gt;").split("\n").join("<br />") : `Disconnected: ${event.code}`}</font>
       <br />
       <div class="button" id="reconnect" style="width: 200px;">Reconnect</div>
       <div class="button" id="back" style="width: 200px;">Back to Server List</div>
