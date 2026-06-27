@@ -699,13 +699,13 @@ function render() {
     guiScale++;
   }
 
-  if (game.currentGUI) {
+  if (currentUserMetadata.currentGUI) {
     ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    var guiBackground = getTexture(game.guis[game.currentGUI].background);
-    var guiBackgroundWidth = (game.guis[game.currentGUI].backgroundWidth || guiBackground.width);
-    var guiBackgroundHeight = (game.guis[game.currentGUI].backgroundHeight || guiBackground.height);
-    ctx.drawImage(guiBackground, game.guis[game.currentGUI].backgroundOffsetX || 0, game.guis[game.currentGUI].backgroundOffsetY || 0, guiBackgroundWidth, guiBackgroundHeight, (canvas.width / 2) - (guiBackgroundWidth * guiScale / 2), (canvas.height / 2) - (guiBackgroundHeight * guiScale / 2), guiBackgroundWidth * guiScale, guiBackgroundHeight * guiScale);
+    var guiBackground = getTexture(game.guis[currentUserMetadata.currentGUI.id].background);
+    var guiBackgroundWidth = (game.guis[currentUserMetadata.currentGUI.id].backgroundWidth || guiBackground.width);
+    var guiBackgroundHeight = (game.guis[currentUserMetadata.currentGUI.id].backgroundHeight || guiBackground.height);
+    ctx.drawImage(guiBackground, game.guis[currentUserMetadata.currentGUI.id].backgroundOffsetX || 0, game.guis[currentUserMetadata.currentGUI.id].backgroundOffsetY || 0, guiBackgroundWidth, guiBackgroundHeight, (canvas.width / 2) - (guiBackgroundWidth * guiScale / 2), (canvas.height / 2) - (guiBackgroundHeight * guiScale / 2), guiBackgroundWidth * guiScale, guiBackgroundHeight * guiScale);
   }
 
   if (!game.hideOverlays && game.debugMode) {

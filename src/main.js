@@ -71,11 +71,16 @@ window.addEventListener("keydown", event => {
     event.preventDefault();
   }
 
-  // Esc to pause/resume
+  // Esc to pause/resume, but prioritize closing current GUI
   if (game.canvas && game.context && event.code == "Escape") {
-    game.paused = !game.paused;
-    game.canvas.style.filter = (game.paused ? "blur(4px)" : "");
-    document.querySelector("#main-menu").style.display = (game.paused ? "flex" : "none");
+    if (game.playerMetadata[game.currentUser.username].currentGUI) {
+      game.playerMetadata[game.currentUser.username].currentGUI = null;
+      sendPacket(PacketType.CLOSE_GUI);
+    } else {
+      game.paused = !game.paused;
+      game.canvas.style.filter = (game.paused ? "blur(4px)" : "");
+      document.querySelector("#main-menu").style.display = (game.paused ? "flex" : "none");
+    }
   }
   if (game.paused) {
     // Don't accept any keys while paused
@@ -90,8 +95,14 @@ window.addEventListener("keydown", event => {
     }
   }
 
+  // E to open inventory/close current GUI
   if (event.code == "KeyE" && game.ws) {
-    sendPacket(PacketType.OPEN_INVENTORY);
+    if (game.playerMetadata[game.currentUser.username].currentGUI) {
+      game.playerMetadata[game.currentUser.username].currentGUI = null;
+      sendPacket(PacketType.CLOSE_GUI);
+    } else {
+      sendPacket(PacketType.OPEN_INVENTORY);
+    }
   }
 
   // F1 to hide overlays like hotbar
