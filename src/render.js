@@ -818,6 +818,23 @@ function handleRightClick(event) {
   if (!game.items[currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item].placeable) {
     return;
   }
+  for (var username in game.playerMetadata) {
+    for (var playerHitbox of game.playerMetadata[username].hitboxes) {
+      if (collidesAABB({
+        "x": game.playerMetadata[username].x.add(playerHitbox.x),
+        "y": game.playerMetadata[username].y.add(playerHitbox.y),
+        "width": new Big(playerHitbox.width),
+        "height": new Big(playerHitbox.height)
+      }, {
+        "x": new Big(Math.floor(x)),
+        "y": new Big(Math.floor(y)),
+        "width": new Big("1"),
+        "height": new Big("1")
+      })) {
+        return;
+      }
+    }
+  }
   var newBlock = {
     "block": currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item,
     "x": newBlockX,
