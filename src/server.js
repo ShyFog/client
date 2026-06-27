@@ -10,7 +10,9 @@ const PacketType = {
   "BLOCK_PLACE": 8,
   "PLAYER_DISCONNECTED": 9,
   "HOTBAR_SWITCH": 10,
-  "SERVER_TRANSFER": 11
+  "SERVER_TRANSFER": 11,
+  "OPEN_INVENTORY": 12,
+  "OPEN_GUI": 13
 };
 
 function sendPacket(...packet) {
@@ -119,6 +121,9 @@ async function handleServerPacket(message) {
     game.serverTransferInProgress = true;
     game.ws.close(1000, "Disconnected");
     connectServer(data[0], data[1]);
+  }
+  if (op == PacketType.OPEN_GUI) {
+    game.currentGUI = data[0];
   }
 }
 

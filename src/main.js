@@ -28,7 +28,8 @@ window.game = {
   "breakingBlock": false,
   "breakingBlockCache": {},
   "breakingBlockTicks": 0,
-  "lastTick": 0
+  "lastTick": 0,
+  "currentGUI": null
 };
 
 function resetState() {
@@ -87,6 +88,10 @@ window.addEventListener("keydown", event => {
       game.playerMetadata[game.currentUser.username].selectedHotbarSlot = (parseInt(event.code.slice(5)) - 1);
       sendPacket(PacketType.HOTBAR_SWITCH, game.playerMetadata[game.currentUser.username].selectedHotbarSlot);
     }
+  }
+
+  if (event.code == "KeyE" && game.ws) {
+    sendPacket(PacketType.OPEN_INVENTORY);
   }
 
   // F1 to hide overlays like hotbar

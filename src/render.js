@@ -614,31 +614,6 @@ function render() {
   ctx.fillStyle = g2;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Hotbar
-  if (!game.hideOverlays && currentUserMetadata.gamemode != "spectator") {
-    var hotbarTexture = getTexture("/gui/sprites/hud/hotbar.png");
-    var hotbarSelectionTexture = getTexture("/gui/sprites/hud/hotbar_selection.png");
-    const hotbarScale = 0.5;
-    var hotbarRatio = (canvas.width * hotbarScale / hotbarTexture.width);
-    var hotbarHeight = hotbarTexture.height * hotbarRatio;
-    var slotWidth = 20 * hotbarRatio;
-    ctx.drawImage(hotbarTexture, canvas.width * ((1 - hotbarScale) / 2), canvas.height - hotbarHeight, canvas.width * hotbarScale, hotbarHeight);
-    ctx.drawImage(hotbarSelectionTexture, (canvas.width * ((1 - hotbarScale) / 2)) + (currentUserMetadata.selectedHotbarSlot * slotWidth) - (1 * hotbarRatio), canvas.height - hotbarHeight - (1 * hotbarRatio), slotWidth + (4 * hotbarRatio), hotbarHeight);
-    for (var hotbarIndex = 0; hotbarIndex < 9; hotbarIndex++) {
-      var hotbarItem = currentUserMetadata.slots[`hotbar.${hotbarIndex}`];
-      if (hotbarItem) {
-        var texture = game.items[hotbarItem.item].texture({ biome });
-        ctx.drawImage(getTexture(texture.file), (canvas.width * ((1 - hotbarScale) / 2)) + (hotbarIndex * slotWidth) + (slotWidth / 4) + (slotWidth / 32) + (slotWidth / 64), canvas.height - hotbarHeight + (hotbarHeight / 4), hotbarHeight / 2, hotbarHeight / 2);
-        if (hotbarItem.count > 1) {
-          ctx.fillStyle = "#ffffff";
-          ctx.textAlign = "end";
-          ctx.font = `${7 * hotbarRatio}px Arial`;
-          ctx.fillText(hotbarItem.count.toString(), (canvas.width * ((1 - hotbarScale) / 2)) + (hotbarIndex * slotWidth) + (slotWidth / 4) + (slotWidth / 8) + (hotbarHeight / 2), canvas.height - hotbarHeight + (hotbarHeight / 4) + (hotbarHeight / 2));
-        }
-      }
-    }
-  }
-
   var blockCursorX = (game.cursorX - cameraX) / blockSize;
   var blockCursorY = -((game.cursorY - cameraY) / blockSize) + 1;
   var blockCursorChunkX = Math.floor(blockCursorX / 16);
@@ -692,6 +667,45 @@ function render() {
         }
       }
     }
+  }
+
+  // Hotbar
+  if (!game.hideOverlays && currentUserMetadata.gamemode != "spectator") {
+    var hotbarTexture = getTexture("/gui/sprites/hud/hotbar.png");
+    var hotbarSelectionTexture = getTexture("/gui/sprites/hud/hotbar_selection.png");
+    const hotbarScale = 0.5;
+    var hotbarRatio = (canvas.width * hotbarScale / hotbarTexture.width);
+    var hotbarHeight = hotbarTexture.height * hotbarRatio;
+    var slotWidth = 20 * hotbarRatio;
+    ctx.drawImage(hotbarTexture, canvas.width * ((1 - hotbarScale) / 2), canvas.height - hotbarHeight, canvas.width * hotbarScale, hotbarHeight);
+    ctx.drawImage(hotbarSelectionTexture, (canvas.width * ((1 - hotbarScale) / 2)) + (currentUserMetadata.selectedHotbarSlot * slotWidth) - (1 * hotbarRatio), canvas.height - hotbarHeight - (1 * hotbarRatio), slotWidth + (4 * hotbarRatio), hotbarHeight);
+    for (var hotbarIndex = 0; hotbarIndex < 9; hotbarIndex++) {
+      var hotbarItem = currentUserMetadata.slots[`hotbar.${hotbarIndex}`];
+      if (hotbarItem) {
+        var texture = game.items[hotbarItem.item].texture({ biome });
+        ctx.drawImage(getTexture(texture.file), (canvas.width * ((1 - hotbarScale) / 2)) + (hotbarIndex * slotWidth) + (slotWidth / 4) + (slotWidth / 32) + (slotWidth / 64), canvas.height - hotbarHeight + (hotbarHeight / 4), hotbarHeight / 2, hotbarHeight / 2);
+        if (hotbarItem.count > 1) {
+          ctx.fillStyle = "#ffffff";
+          ctx.textAlign = "end";
+          ctx.font = `${7 * hotbarRatio}px Arial`;
+          ctx.fillText(hotbarItem.count.toString(), (canvas.width * ((1 - hotbarScale) / 2)) + (hotbarIndex * slotWidth) + (slotWidth / 4) + (slotWidth / 8) + (hotbarHeight / 2), canvas.height - hotbarHeight + (hotbarHeight / 4) + (hotbarHeight / 2));
+        }
+      }
+    }
+  }
+
+  var guiScale = 1;
+  while(256 * (guiScale + 1) <= Math.min(canvas.width, canvas.height)) {
+    guiScale++;
+  }
+
+  if (game.currentGUI) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    var guiBackground = getTexture(game.guis[game.currentGUI].background);
+    var guiBackgroundWidth = (game.guis[game.currentGUI].backgroundWidth || guiBackground.width);
+    var guiBackgroundHeight = (game.guis[game.currentGUI].backgroundHeight || guiBackground.height);
+    ctx.drawImage(guiBackground, game.guis[game.currentGUI].backgroundOffsetX || 0, game.guis[game.currentGUI].backgroundOffsetY || 0, guiBackgroundWidth, guiBackgroundHeight, (canvas.width / 2) - (guiBackgroundWidth * guiScale / 2), (canvas.height / 2) - (guiBackgroundHeight * guiScale / 2), guiBackgroundWidth * guiScale, guiBackgroundHeight * guiScale);
   }
 
   if (!game.hideOverlays && game.debugMode) {
