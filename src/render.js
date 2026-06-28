@@ -670,16 +670,40 @@ function render() {
     }
   }
 
-  // Hotbar
+  // Auto-detect GUI scale
+  var guiScale = 1;
+  while(256 * (guiScale + 1) <= Math.min(canvas.width, canvas.height)) {
+    guiScale++;
+  }
+
+  // HUD
   if (!game.hideOverlays && currentUserMetadata.gamemode != "spectator") {
+    var heartContainerTexture = getTexture("/gui/sprites/hud/heart/container.png");
+    var fullHeartTexture = getTexture("/gui/sprites/hud/heart/full.png");
+    var experienceBarTexture = getTexture("/gui/sprites/hud/experience_bar_background.png");
     var hotbarTexture = getTexture("/gui/sprites/hud/hotbar.png");
     var hotbarSelectionTexture = getTexture("/gui/sprites/hud/hotbar_selection.png");
+
     const hotbarScale = 0.5;
     var hotbarRatio = (canvas.width * hotbarScale / hotbarTexture.width);
     var hotbarHeight = hotbarTexture.height * hotbarRatio;
     var slotWidth = 20 * hotbarRatio;
+    var experienceBarHeight = experienceBarTexture.height * hotbarRatio;
+
+    // Health + experience bar
+    /*if (currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "adventure") {
+      for (var i = 0; i < 10; i++) {
+        ctx.drawImage(heartContainerTexture, canvas.width * ((1 - hotbarScale) / 2) + 2 + (heartContainerTexture.width * guiScale * i) - (guiScale * i), canvas.height - hotbarHeight - experienceBarHeight - (heartContainerTexture.height * guiScale) - 10, heartContainerTexture.width * guiScale, heartContainerTexture.height * guiScale);
+        ctx.drawImage(fullHeartTexture, canvas.width * ((1 - hotbarScale) / 2) + 2 + (fullHeartTexture.width * guiScale * i) - (guiScale * i), canvas.height - hotbarHeight - experienceBarHeight - (fullHeartTexture.height * guiScale) - 10, fullHeartTexture.width * guiScale, fullHeartTexture.height * guiScale);
+      }
+      ctx.drawImage(experienceBarTexture, canvas.width * ((1 - hotbarScale) / 2), canvas.height - hotbarHeight - experienceBarHeight - 5, canvas.width * hotbarScale, experienceBarHeight);
+    }*/
+
+    // Hotbar + hotbar selector
     ctx.drawImage(hotbarTexture, canvas.width * ((1 - hotbarScale) / 2), canvas.height - hotbarHeight, canvas.width * hotbarScale, hotbarHeight);
     ctx.drawImage(hotbarSelectionTexture, (canvas.width * ((1 - hotbarScale) / 2)) + (currentUserMetadata.selectedHotbarSlot * slotWidth) - (1 * hotbarRatio), canvas.height - hotbarHeight - (1 * hotbarRatio), slotWidth + (4 * hotbarRatio), hotbarHeight);
+
+    // Hotbar contents
     for (var hotbarIndex = 0; hotbarIndex < 9; hotbarIndex++) {
       var hotbarItem = currentUserMetadata.slots[`hotbar.${hotbarIndex}`];
       if (hotbarItem) {
@@ -693,11 +717,6 @@ function render() {
         }
       }
     }
-  }
-
-  var guiScale = 1;
-  while(256 * (guiScale + 1) <= Math.min(canvas.width, canvas.height)) {
-    guiScale++;
   }
 
   if (currentUserMetadata.currentGUI) {
