@@ -20,6 +20,12 @@ a {
   cursor: pointer;
 }
 
+/* Font */
+@font-face {
+  font-family: "Minecraft";
+  src: url("minecraft.ttf") format("truetype");
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 10px;

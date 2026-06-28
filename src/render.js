@@ -586,7 +586,7 @@ function render() {
   for (var username in game.playerMetadata) {
     if (username != game.currentUser.username && game.playerMetadata[username].gamemode != "spectator") {
       ctx.textAlign = "center";
-      ctx.font = "13px Arial";
+      ctx.font = "10px Minecraft";
       ctx.fillStyle = "#000000";
       ctx.save();
       ctx.globalAlpha = 0.5;
@@ -712,7 +712,7 @@ function render() {
         if (hotbarItem.count > 1) {
           ctx.fillStyle = "#ffffff";
           ctx.textAlign = "end";
-          ctx.font = `${7 * hotbarRatio}px Arial`;
+          ctx.font = `${7 * hotbarRatio}px Minecraft`;
           ctx.fillText(hotbarItem.count.toString(), (canvas.width * ((1 - hotbarScale) / 2)) + (hotbarIndex * slotWidth) + (slotWidth / 4) + (slotWidth / 8) + (hotbarHeight / 2), canvas.height - hotbarHeight + (hotbarHeight / 4) + (hotbarHeight / 2));
         }
       }
@@ -722,10 +722,63 @@ function render() {
   if (currentUserMetadata.currentGUI) {
     ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    var guiBackground = getTexture(game.guis[currentUserMetadata.currentGUI.id].background);
-    var guiBackgroundWidth = (game.guis[currentUserMetadata.currentGUI.id].backgroundWidth || guiBackground.width);
-    var guiBackgroundHeight = (game.guis[currentUserMetadata.currentGUI.id].backgroundHeight || guiBackground.height);
-    ctx.drawImage(guiBackground, game.guis[currentUserMetadata.currentGUI.id].backgroundOffsetX || 0, game.guis[currentUserMetadata.currentGUI.id].backgroundOffsetY || 0, guiBackgroundWidth, guiBackgroundHeight, (canvas.width / 2) - (guiBackgroundWidth * guiScale / 2), (canvas.height / 2) - (guiBackgroundHeight * guiScale / 2), guiBackgroundWidth * guiScale, guiBackgroundHeight * guiScale);
+    var currentGUIData = game.guis[currentUserMetadata.currentGUI.id];
+    var guiBackground = getTexture(currentGUIData.background);
+    var guiBackgroundWidth = (currentGUIData.backgroundWidth || guiBackground.width);
+    var guiBackgroundHeight = (currentGUIData.backgroundHeight || guiBackground.height);
+    var guiStartX = (canvas.width / 2) - (guiBackgroundWidth * guiScale / 2);
+    var guiStartY = (canvas.height / 2) - (guiBackgroundHeight * guiScale / 2);
+    var hoveringItem = null;
+    ctx.drawImage(guiBackground, currentGUIData.backgroundOffsetX || 0, currentGUIData.backgroundOffsetY || 0, guiBackgroundWidth, guiBackgroundHeight, guiStartX, guiStartY, guiBackgroundWidth * guiScale, guiBackgroundHeight * guiScale);
+    for (var element of currentGUIData.content) {
+      if (["player_slot", "block_slot", "world_slot"].includes(element.type)) {
+        var hovering = game.cursorX >= guiStartX + (element.x * guiScale) && game.cursorY >= guiStartY + (element.y * guiScale) && game.cursorX <= guiStartX + ((element.x + element.width) * guiScale) && game.cursorY <= guiStartY + ((element.y + element.height) * guiScale);
+        if (hovering) {
+          ctx.fillStyle = "rgba(255, 255, 255, 0.46)";
+          ctx.fillRect(guiStartX + ((element.x + 1) * guiScale), guiStartY + ((element.y + 1) * guiScale), (element.width - 2) * guiScale, (element.height - 2) * guiScale);
+        }
+        var slotItem = null;
+        if (element.type == "player_slot") {
+          slotItem = currentUserMetadata.slots[element.slot];
+        }
+        if (slotItem) {
+          var texture = game.items[slotItem.item].texture({ biome });
+          ctx.drawImage(getTexture(texture.file), guiStartX + ((element.x + 1) * guiScale) + (element.width * guiScale * 0.1), guiStartY + ((element.y + 1) * guiScale) + (element.height * guiScale * 0.1), element.width * guiScale * 0.7, element.height * guiScale * 0.7);
+          if (slotItem.count > 1) {
+            ctx.fillStyle = "#ffffff";
+            ctx.textAlign = "end";
+            ctx.font = `${9 * guiScale}px Minecraft`;
+            ctx.fillText(slotItem.count.toString(), guiStartX + ((element.x + element.width - 2) * guiScale), guiStartY + ((element.y + element.height - 2) * guiScale));
+          }
+          if (hovering) {
+            hoveringItem = slotItem;
+          }
+        }
+      }
+    }
+    if (hoveringItem) {
+      ctx.textAlign = "start";
+      ctx.font = `${8 * guiScale}px Minecraft`;
+      var tooltipX = game.cursorX + (8 * guiScale);
+      var tooltipY = game.cursorY - (16 * guiScale);
+      var tooltipWidth = ctx.measureText("Name").width + (5 * guiScale);
+      ctx.fillStyle = "rgba(16, 0, 16, 0.94)";
+      ctx.fillRect(tooltipX + (1 * guiScale), tooltipY, tooltipWidth, 16 * guiScale);
+      ctx.fillRect(tooltipX, tooltipY + (1 * guiScale), 1 * guiScale, 14 * guiScale);
+      ctx.fillRect(tooltipX + tooltipWidth + (1 * guiScale), tooltipY + (1 * guiScale), 1 * guiScale, 14 * guiScale);
+      ctx.fillStyle = "rgba(80, 0, 255, 0.315)";
+      ctx.fillRect(tooltipX + (2 * guiScale), tooltipY + (1 * guiScale), tooltipWidth - (2 * guiScale), 1 * guiScale);
+      ctx.fillStyle = "rgba(41, 0, 128, 0.315)";
+      ctx.fillRect(tooltipX + (2 * guiScale), tooltipY + (14 * guiScale), tooltipWidth - (2 * guiScale), 1 * guiScale);
+      var g = ctx.createLinearGradient(0, tooltipY + (2 * guiScale), 0, tooltipY + (2 * guiScale) + (12 * guiScale));
+      g.addColorStop(0, "rgba(80, 0, 255, 0.315)");
+      g.addColorStop(1, "rgba(41, 0, 128, 0.315)");
+      ctx.fillStyle = g;
+      ctx.fillRect(tooltipX + (1 * guiScale), tooltipY + (2 * guiScale), 1 * guiScale, 12 * guiScale);
+      ctx.fillRect(tooltipX + tooltipWidth, tooltipY + (2 * guiScale), 1 * guiScale, 12 * guiScale);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText("Name", tooltipX + (4 * guiScale), tooltipY + (11 * guiScale));
+    }
   }
 
   if (!game.hideOverlays && game.debugMode) {
