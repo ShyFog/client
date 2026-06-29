@@ -219,8 +219,8 @@ function render() {
                 "width": new Big(playerHitbox.width),
                 "height": new Big(playerHitbox.height)
               }, {
-                "x": (new Big(chunkOffset[0] * 16)).add(block.x).add(hitbox.x),
-                "y": (new Big(chunkOffset[1] * 16)).add(block.y).add(hitbox.y).add(1),
+                "x": new Big((chunkOffset[0] * 16) + block.x + hitbox.x),
+                "y": new Big((chunkOffset[1] * 16) + block.y + hitbox.y + 1),
                 "width": new Big(hitbox.width),
                 "height": new Big(hitbox.height)
               }, false, true) == "bottom") {
@@ -267,8 +267,8 @@ function render() {
                 "width": new Big(playerHitbox.width),
                 "height": new Big(playerHitbox.height)
               }, {
-                "x": (new Big(chunkOffset[0] * 16)).add(block.x).add(hitbox.x),
-                "y": (new Big(chunkOffset[1] * 16)).add(block.y).add(hitbox.y).add(1),
+                "x": new Big((chunkOffset[0] * 16) + block.x + hitbox.x),
+                "y": new Big((chunkOffset[1] * 16) + block.y + hitbox.y + 1),
                 "width": new Big(hitbox.width),
                 "height": new Big(hitbox.height)
               })) {
@@ -321,8 +321,8 @@ function render() {
                 "width": new Big(playerHitbox.width),
                 "height": new Big(playerHitbox.height)
               }, {
-                "x": (new Big(chunkOffset[0] * 16)).add(block.x).add(hitbox.x),
-                "y": (new Big(chunkOffset[1] * 16)).add(block.y).add(hitbox.y).add(1),
+                "x": new Big((chunkOffset[0] * 16) + block.x + hitbox.x),
+                "y": new Big((chunkOffset[1] * 16) + block.y + hitbox.y + 1),
                 "width": new Big(hitbox.width),
                 "height": new Big(hitbox.height)
               })) {
@@ -376,8 +376,8 @@ function render() {
                 "width": new Big(playerHitbox.width),
                 "height": new Big(playerHitbox.height)
               }, {
-                "x": (new Big(chunkOffset[0] * 16)).add(block.x).add(hitbox.x),
-                "y": (new Big(chunkOffset[1] * 16)).add(block.y).add(hitbox.y).add(1),
+                "x": new Big((chunkOffset[0] * 16) + block.x + hitbox.x),
+                "y": new Big((chunkOffset[1] * 16) + block.y + hitbox.y + 1),
                 "width": new Big(hitbox.width),
                 "height": new Big(hitbox.height)
               })) {
@@ -422,8 +422,8 @@ function render() {
                 "width": new Big(playerHitbox.width),
                 "height": new Big(playerHitbox.height)
               }, {
-                "x": (new Big(chunkOffset[0] * 16)).add(block.x).add(hitbox.x),
-                "y": (new Big(chunkOffset[1] * 16)).add(block.y).add(hitbox.y).add(1),
+                "x": new Big((chunkOffset[0] * 16) + block.x + hitbox.x),
+                "y": new Big((chunkOffset[1] * 16) + block.y + hitbox.y + 1),
                 "width": new Big(hitbox.width),
                 "height": new Big(hitbox.height)
               })) {
