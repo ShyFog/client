@@ -47,6 +47,7 @@ function resetState() {
   game.ws = null;
   game.serverSoftware = "";
   game.serverVersion = "";
+  game.paused = false;
 }
 
 // Handle window resizing
