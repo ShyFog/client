@@ -158,10 +158,13 @@ function render() {
   }
   var biome = null;
   var currentBiomeRange = bigToNumber(bigFloor(playerChunkPositionX));
-  for (var biomeRange in game.biomes[`${playerChunkX},${playerChunkY},${playerChunkZ}`]) {
-    var [ start, end ] = biomeRange.split(",").map(part => parseFloat(part));
+  if (!game.biomes[`${playerChunkX},${playerChunkY},${playerChunkZ}`]) {
+    return window.requestAnimationFrame(render);
+  }
+  for (var biomeRange of game.biomes[`${playerChunkX},${playerChunkY},${playerChunkZ}`]) {
+    var [ start, end, type ] = biomeRange;
     if (currentBiomeRange >= start && currentBiomeRange <= end) {
-      biome = game.biomes[`${playerChunkX},${playerChunkY},${playerChunkZ}`][biomeRange];
+      biome = type;
       break;
     }
   }
@@ -546,10 +549,10 @@ function render() {
             continue;
           }
           var chunkBiome = null;
-          for (var biomeRange in game.biomes[`${chunkX},${chunkY},${chunkZ}`]) {
-            var [ start, end ] = biomeRange.split(",").map(part => parseFloat(part));
+          for (var biomeRange of game.biomes[`${chunkX},${chunkY},${chunkZ}`]) {
+            var [ start, end, type ] = biomeRange;
             if (block.x >= start && block.x <= end) {
-              chunkBiome = game.biomes[`${chunkX},${chunkY},${chunkZ}`][biomeRange];
+              chunkBiome = type;
               break;
             }
           }
