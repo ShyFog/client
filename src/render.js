@@ -202,10 +202,10 @@ function render() {
           continue;
         }
         for (var block of game.chunks[`${playerChunkX + chunkOffset[0]},${playerChunkY + chunkOffset[1]},${playerChunkZ + chunkOffset[2]}`]) {
-          if (!block || !game.items[block.block].hitboxes) {
+          if (!block) {
             continue;
           }
-          for (var hitbox of game.items[block.block].hitboxes) {
+          for (var hitbox of game.items[block.block]({}).hitboxes) {
             if (hitbox.type == "none") {
               continue;
             }
@@ -250,10 +250,10 @@ function render() {
           continue;
         }
         for (var block of game.chunks[`${playerChunkX + chunkOffset[0]},${playerChunkY + chunkOffset[1]},${playerChunkZ + chunkOffset[2]}`]) {
-          if (!block || !game.items[block.block].hitboxes) {
+          if (!block) {
             continue;
           }
-          for (var hitbox of game.items[block.block].hitboxes) {
+          for (var hitbox of game.items[block.block]({}).hitboxes) {
             if (hitbox.type == "none") {
               continue;
             }
@@ -304,10 +304,10 @@ function render() {
           continue;
         }
         for (var block of game.chunks[`${playerChunkX + chunkOffset[0]},${playerChunkY + chunkOffset[1]},${playerChunkZ + chunkOffset[2]}`]) {
-          if (!block || !game.items[block.block].hitboxes) {
+          if (!block) {
             continue;
           }
-          for (var hitbox of game.items[block.block].hitboxes) {
+          for (var hitbox of game.items[block.block]({}).hitboxes) {
             if (hitbox.type == "none") {
               continue;
             }
@@ -359,10 +359,10 @@ function render() {
         [-1, 1, 0]
       ]) {
         for (var block of game.chunks[`${playerChunkX + chunkOffset[0]},${playerChunkY + chunkOffset[1]},${playerChunkZ + chunkOffset[2]}`]) {
-          if (!block || !game.items[block.block].hitboxes) {
+          if (!block ) {
             continue;
           }
-          for (var hitbox of game.items[block.block].hitboxes) {
+          for (var hitbox of game.items[block.block]({}).hitboxes) {
             if (hitbox.type == "none") {
               continue;
             }
@@ -405,10 +405,10 @@ function render() {
         [1, 1, 0]
       ]) {
         for (var block of game.chunks[`${playerChunkX + chunkOffset[0]},${playerChunkY + chunkOffset[1]},${playerChunkZ + chunkOffset[2]}`]) {
-          if (!block || !game.items[block.block].hitboxes) {
+          if (!block) {
             continue;
           }
-          for (var hitbox of game.items[block.block].hitboxes) {
+          for (var hitbox of game.items[block.block]({}).hitboxes) {
             if (hitbox.type == "none") {
               continue;
             }
@@ -553,7 +553,10 @@ function render() {
               break;
             }
           }
-          var texture = game.items[block.block].texture({
+          if (!game.items[block.block]) {
+            throw `Unknown block "${block.block}".`;
+          }
+          var blockData = game.items[block.block]({
             "biome": chunkBiome
           });
           // Optimization: Don't render blocks that aren't visible
@@ -561,8 +564,11 @@ function render() {
             continue;
           }
           // Draw two times to fix aliasing
+          // TODO: Some users still have aliasing issues (?)
           for (var i = 0; i < 2; i++) {
-            ctx.drawImage(getTexture(texture.file), (((chunkX * 16) + block.x) * blockSize) + cameraX, (((chunkY * -16) - block.y) * blockSize) + cameraY, blockSize, blockSize);
+            for (var texture of blockData.texture) {
+              ctx.drawImage(getTexture(texture.file), (((chunkX * 16) + block.x + texture.x) * blockSize) + cameraX, (((chunkY * -16) - block.y - texture.y) * blockSize) + cameraY, texture.width * blockSize, texture.height * blockSize);
+            }
           }
         }
         if (chunkZ < playerChunkZ) {
@@ -654,15 +660,15 @@ function render() {
             game.lastTick = now - ((now - game.lastTick) % 30);
             game.breakingBlockTicks++;
           }
-          if (game.items[block.block].hardness == -1) {
+          if (game.items[block.block]({}).hardness == -1) {
             ctx.drawImage(getTexture("/block/destroy_stage_0.png"), (Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
           } else {
-            if (game.breakingBlockTicks >= game.items[block.block].hardness * 100) {
+            if (game.breakingBlockTicks >= game.items[block.block]({}).hardness * 100) {
               game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`][blockId] = null;
               sendPacket(PacketType.BLOCK_BREAK, blockCursorX, blockCursorY, bigToNumber(currentUserMetadata.z));
             }
-            if (game.items[block.block].hardness) {
-              ctx.drawImage(getTexture(`/block/destroy_stage_${Math.round(Math.min(game.breakingBlockTicks, game.items[block.block].hardness * 100) / (game.items[block.block].hardness * 100) * 9)}.png`), (Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
+            if (game.items[block.block]({}).hardness) {
+              ctx.drawImage(getTexture(`/block/destroy_stage_${Math.round(Math.min(game.breakingBlockTicks, game.items[block.block]({}).hardness * 100) / (game.items[block.block]({}).hardness * 100) * 9)}.png`), (Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
             }
           }
         }
@@ -707,7 +713,7 @@ function render() {
     for (var hotbarIndex = 0; hotbarIndex < 9; hotbarIndex++) {
       var hotbarItem = currentUserMetadata.slots[`hotbar.${hotbarIndex}`];
       if (hotbarItem) {
-        var texture = game.items[hotbarItem.item].texture({ biome });
+        var texture = game.items[hotbarItem.item]({ biome }).texture[0];
         ctx.drawImage(getTexture(texture.file), (canvas.width * ((1 - hotbarScale) / 2)) + (hotbarIndex * slotWidth) + (slotWidth / 4) + (slotWidth / 32) + (slotWidth / 64), canvas.height - hotbarHeight + (hotbarHeight / 4), hotbarHeight / 2, hotbarHeight / 2);
         if (hotbarItem.count > 1) {
           ctx.fillStyle = "#ffffff";
@@ -742,7 +748,7 @@ function render() {
           slotItem = currentUserMetadata.slots[element.slot];
         }
         if (slotItem) {
-          var texture = game.items[slotItem.item].texture({ biome });
+          var texture = game.items[slotItem.item]({ biome }).texture[0];
           ctx.drawImage(getTexture(texture.file), guiStartX + ((element.x + 1) * guiScale) + (element.width * guiScale * 0.1), guiStartY + ((element.y + 1) * guiScale) + (element.height * guiScale * 0.1), element.width * guiScale * 0.7, element.height * guiScale * 0.7);
           if (slotItem.count > 1) {
             ctx.fillStyle = "#ffffff";
@@ -759,9 +765,10 @@ function render() {
     if (hoveringItem) {
       ctx.textAlign = "start";
       ctx.font = `${8 * guiScale}px Minecraft`;
+      var itemName = game.items[hoveringItem.item]({ biome }).name;
       var tooltipX = game.cursorX + (8 * guiScale);
       var tooltipY = game.cursorY - (16 * guiScale);
-      var tooltipWidth = ctx.measureText("Name").width + (5 * guiScale);
+      var tooltipWidth = ctx.measureText(itemName).width + (5 * guiScale);
       ctx.fillStyle = "rgba(16, 0, 16, 0.94)";
       ctx.fillRect(tooltipX + (1 * guiScale), tooltipY, tooltipWidth, 16 * guiScale);
       ctx.fillRect(tooltipX, tooltipY + (1 * guiScale), 1 * guiScale, 14 * guiScale);
@@ -777,7 +784,7 @@ function render() {
       ctx.fillRect(tooltipX + (1 * guiScale), tooltipY + (2 * guiScale), 1 * guiScale, 12 * guiScale);
       ctx.fillRect(tooltipX + tooltipWidth, tooltipY + (2 * guiScale), 1 * guiScale, 12 * guiScale);
       ctx.fillStyle = "#ffffff";
-      ctx.fillText("Name", tooltipX + (4 * guiScale), tooltipY + (11 * guiScale));
+      ctx.fillText(itemName, tooltipX + (4 * guiScale), tooltipY + (11 * guiScale));
     }
   }
 
@@ -887,7 +894,7 @@ function handleRightClick(event) {
   if (!currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`]) {
     return;
   }
-  if (!game.items[currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item].placeable) {
+  if (!game.items[currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item]({}).placeable) {
     return;
   }
   for (var username in game.playerMetadata) {
