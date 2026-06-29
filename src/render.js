@@ -690,6 +690,7 @@ function render() {
   // HUD
   if (!game.hideOverlays && currentUserMetadata.gamemode != "spectator") {
     var heartContainerTexture = getTexture("/gui/sprites/hud/heart/container.png");
+    var halfHeartTexture = getTexture("/gui/sprites/hud/heart/half.png");
     var fullHeartTexture = getTexture("/gui/sprites/hud/heart/full.png");
     var emptyFoodTexture = getTexture("/gui/sprites/hud/food_empty.png");
     var fullFoodTexture = getTexture("/gui/sprites/hud/food_full.png");
@@ -699,9 +700,18 @@ function render() {
 
     if (currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "adventure") {
       // Health
-      for (var i = 0; i < 10; i++) {
-        ctx.drawImage(heartContainerTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (i * heartContainerTexture.width * guiScale) - (i * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (heartContainerTexture.height * guiScale), heartContainerTexture.width * guiScale, heartContainerTexture.height * guiScale);
-        ctx.drawImage(fullHeartTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (i * fullHeartTexture.width * guiScale) - (i * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (fullHeartTexture.height * guiScale), fullHeartTexture.width * guiScale, fullHeartTexture.height * guiScale);
+      // TODO: Make server-controllable
+      const currentHealth = 20;
+      const maxHealth = 20;
+      for (var i = 0; i < maxHealth; i += 2) {
+        ctx.drawImage(heartContainerTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (i / 2 * heartContainerTexture.width * guiScale) - (i / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (heartContainerTexture.height * guiScale), heartContainerTexture.width * guiScale, heartContainerTexture.height * guiScale);
+      }
+      for (var i = 0; i < currentHealth; i += 2) {
+        if (currentHealth % 2 && i == currentHealth - 1) {
+          ctx.drawImage(halfHeartTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (i / 2 * halfHeartTexture.width * guiScale) - (i / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (halfHeartTexture.height * guiScale), halfHeartTexture.width * guiScale, halfHeartTexture.height * guiScale);
+        } else {
+          ctx.drawImage(fullHeartTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (i / 2 * fullHeartTexture.width * guiScale) - (i / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (fullHeartTexture.height * guiScale), fullHeartTexture.width * guiScale, fullHeartTexture.height * guiScale);
+        }
       }
 
       // Hunger
