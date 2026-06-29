@@ -686,43 +686,47 @@ function render() {
   if (!game.hideOverlays && currentUserMetadata.gamemode != "spectator") {
     var heartContainerTexture = getTexture("/gui/sprites/hud/heart/container.png");
     var fullHeartTexture = getTexture("/gui/sprites/hud/heart/full.png");
+    var emptyFoodTexture = getTexture("/gui/sprites/hud/food_empty.png");
+    var fullFoodTexture = getTexture("/gui/sprites/hud/food_full.png");
     var experienceBarTexture = getTexture("/gui/sprites/hud/experience_bar_background.png");
     var hotbarTexture = getTexture("/gui/sprites/hud/hotbar.png");
     var hotbarSelectionTexture = getTexture("/gui/sprites/hud/hotbar_selection.png");
 
-    const hotbarScale = 0.5;
-    var hotbarRatio = (canvas.width * hotbarScale / hotbarTexture.width);
-    var hotbarHeight = hotbarTexture.height * hotbarRatio;
-    var slotWidth = 20 * hotbarRatio;
-    var experienceBarHeight = experienceBarTexture.height * hotbarRatio;
-
-    // Health + experience bar
-    /*if (currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "adventure") {
+    if (currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "adventure") {
+      // Health
       for (var i = 0; i < 10; i++) {
-        ctx.drawImage(heartContainerTexture, canvas.width * ((1 - hotbarScale) / 2) + 2 + (heartContainerTexture.width * guiScale * i) - (guiScale * i), canvas.height - hotbarHeight - experienceBarHeight - (heartContainerTexture.height * guiScale) - 10, heartContainerTexture.width * guiScale, heartContainerTexture.height * guiScale);
-        ctx.drawImage(fullHeartTexture, canvas.width * ((1 - hotbarScale) / 2) + 2 + (fullHeartTexture.width * guiScale * i) - (guiScale * i), canvas.height - hotbarHeight - experienceBarHeight - (fullHeartTexture.height * guiScale) - 10, fullHeartTexture.width * guiScale, fullHeartTexture.height * guiScale);
+        ctx.drawImage(heartContainerTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (i * heartContainerTexture.width * guiScale) - (i * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (heartContainerTexture.height * guiScale), heartContainerTexture.width * guiScale, heartContainerTexture.height * guiScale);
+        ctx.drawImage(fullHeartTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (i * fullHeartTexture.width * guiScale) - (i * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (fullHeartTexture.height * guiScale), fullHeartTexture.width * guiScale, fullHeartTexture.height * guiScale);
       }
-      ctx.drawImage(experienceBarTexture, canvas.width * ((1 - hotbarScale) / 2), canvas.height - hotbarHeight - experienceBarHeight - 5, canvas.width * hotbarScale, experienceBarHeight);
-    }*/
 
-    // Hotbar + hotbar selector
-    ctx.drawImage(hotbarTexture, canvas.width * ((1 - hotbarScale) / 2), canvas.height - hotbarHeight, canvas.width * hotbarScale, hotbarHeight);
-    ctx.drawImage(hotbarSelectionTexture, (canvas.width * ((1 - hotbarScale) / 2)) + (currentUserMetadata.selectedHotbarSlot * slotWidth) - (1 * hotbarRatio), canvas.height - hotbarHeight - (1 * hotbarRatio), slotWidth + (4 * hotbarRatio), hotbarHeight);
+      // Hunger
+      for (var i = 0; i < 10; i++) {
+        ctx.drawImage(emptyFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - ((i + 1) * emptyFoodTexture.width * guiScale) + (i * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (emptyFoodTexture.height * guiScale), emptyFoodTexture.width * guiScale, emptyFoodTexture.height * guiScale);
+        ctx.drawImage(fullFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - ((i + 1) * fullFoodTexture.width * guiScale) + (i * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (fullFoodTexture.height * guiScale), fullFoodTexture.width * guiScale, fullFoodTexture.height * guiScale);
+      }
 
-    // Hotbar contents
+      // Experience bar
+      ctx.drawImage(experienceBarTexture, (canvas.width / 2) - (experienceBarTexture.width * guiScale / 2), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale), experienceBarTexture.width * guiScale, experienceBarTexture.height * guiScale);
+    }
+
+    // Hotbar
+    ctx.drawImage(hotbarTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2), canvas.height - (hotbarTexture.height * guiScale), hotbarTexture.width * guiScale, hotbarTexture.height * guiScale);
     for (var hotbarIndex = 0; hotbarIndex < 9; hotbarIndex++) {
       var hotbarItem = currentUserMetadata.slots[`hotbar.${hotbarIndex}`];
       if (hotbarItem) {
         var texture = game.items[hotbarItem.item]({ biome }).texture[0];
-        ctx.drawImage(getTexture(texture.file), (canvas.width * ((1 - hotbarScale) / 2)) + (hotbarIndex * slotWidth) + (slotWidth / 4) + (slotWidth / 32) + (slotWidth / 64), canvas.height - hotbarHeight + (hotbarHeight / 4), hotbarHeight / 2, hotbarHeight / 2);
+        ctx.drawImage(getTexture(texture.file), (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (20 * guiScale * hotbarIndex) + (6 * guiScale), canvas.height - (hotbarTexture.height * guiScale) + (6 * guiScale), 10 * guiScale, 10 * guiScale);
         if (hotbarItem.count > 1) {
           ctx.fillStyle = "#ffffff";
           ctx.textAlign = "end";
-          ctx.font = `${7 * hotbarRatio}px Minecraft`;
-          ctx.fillText(hotbarItem.count.toString(), (canvas.width * ((1 - hotbarScale) / 2)) + (hotbarIndex * slotWidth) + (slotWidth / 4) + (slotWidth / 8) + (hotbarHeight / 2), canvas.height - hotbarHeight + (hotbarHeight / 4) + (hotbarHeight / 2));
+          ctx.font = `${7 * guiScale}px Minecraft`;
+          ctx.fillText(hotbarItem.count.toString(), (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (20 * guiScale * hotbarIndex) + (19 * guiScale), canvas.height - (hotbarTexture.height * guiScale) + (18 * guiScale));
         }
       }
     }
+
+    // Hotbar selector
+    ctx.drawImage(hotbarSelectionTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (20 * guiScale * currentUserMetadata.selectedHotbarSlot) - guiScale, canvas.height - (hotbarTexture.height * guiScale) - guiScale, hotbarSelectionTexture.width * guiScale, hotbarSelectionTexture.height * guiScale); 
   }
 
   if (currentUserMetadata.currentGUI) {
@@ -753,8 +757,8 @@ function render() {
           if (slotItem.count > 1) {
             ctx.fillStyle = "#ffffff";
             ctx.textAlign = "end";
-            ctx.font = `${9 * guiScale}px Minecraft`;
-            ctx.fillText(slotItem.count.toString(), guiStartX + ((element.x + element.width - 2) * guiScale), guiStartY + ((element.y + element.height - 2) * guiScale));
+            ctx.font = `${8 * guiScale}px Minecraft`;
+            ctx.fillText(slotItem.count.toString(), guiStartX + ((element.x + element.width - 1) * guiScale), guiStartY + ((element.y + element.height - 2) * guiScale));
           }
           if (hovering) {
             hoveringItem = slotItem;
