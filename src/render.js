@@ -746,6 +746,26 @@ function render() {
     var hoveringItem = null;
     ctx.drawImage(guiBackground, currentGUIData.backgroundOffsetX || 0, currentGUIData.backgroundOffsetY || 0, guiBackgroundWidth, guiBackgroundHeight, guiStartX, guiStartY, guiBackgroundWidth * guiScale, guiBackgroundHeight * guiScale);
     for (var element of currentGUIData.content) {
+      if (element.type == "image") {
+        ctx.drawImage(getTexture(element.file), guiStartX + (element.x * guiScale), guiStartY + (element.y * guiScale), element.width * guiScale, element.height * guiScale);
+      }
+      if (element.type == "current_player") {
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale), element.width * guiScale / 2, element.height * guiScale / 4);
+        ctx.fillRect(guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale), element.width * guiScale / 2, element.height * guiScale / 4);
+        ctx.fillRect(guiStartX + (element.x * guiScale), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
+        ctx.fillRect(guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4), element.width * guiScale / 2, element.height * guiScale / 8 * 3);
+        ctx.fillRect(guiStartX + (element.x * guiScale) + (element.width * guiScale / 4) + (element.width * guiScale / 2), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
+        ctx.fillRect(guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4) + (element.height * guiScale / 8 * 3), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
+        ctx.fillRect(guiStartX + (element.x * guiScale) + (element.width * guiScale / 2), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4) + (element.height * guiScale / 8 * 3), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
+        ctx.drawImage(getTexture(`/skin/${game.currentUser.username}`), 8, 8, 8, 8, guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale), element.width * guiScale / 2, element.height * guiScale / 4);
+        ctx.drawImage(getTexture(`/skin/${game.currentUser.username}`), 40, 8, 8, 8, guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale), element.width * guiScale / 2, element.height * guiScale / 4);
+        ctx.drawImage(getTexture(`/skin/${game.currentUser.username}`), 44, 20, 4, 12, guiStartX + (element.x * guiScale), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
+        ctx.drawImage(getTexture(`/skin/${game.currentUser.username}`), 20, 20, 8, 12, guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4), element.width * guiScale / 2, element.height * guiScale / 8 * 3);
+        ctx.drawImage(getTexture(`/skin/${game.currentUser.username}`), 36, 52, 4, 12, guiStartX + (element.x * guiScale) + (element.width * guiScale / 4) + (element.width * guiScale / 2), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
+        ctx.drawImage(getTexture(`/skin/${game.currentUser.username}`), 4, 20, 4, 12, guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4) + (element.height * guiScale / 8 * 3), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
+        ctx.drawImage(getTexture(`/skin/${game.currentUser.username}`), 20, 52, 4, 12, guiStartX + (element.x * guiScale) + (element.width * guiScale / 2), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4) + (element.height * guiScale / 8 * 3), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
+      }
       if (["player_slot", "block_slot", "world_slot"].includes(element.type)) {
         var hovering = game.cursorX >= guiStartX + (element.x * guiScale) && game.cursorY >= guiStartY + (element.y * guiScale) && game.cursorX <= guiStartX + ((element.x + element.width) * guiScale) && game.cursorY <= guiStartY + ((element.y + element.height) * guiScale);
         if (hovering) {
