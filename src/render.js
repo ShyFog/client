@@ -333,7 +333,9 @@ function render() {
           }
         }
       }
-      if (foundCollision) {
+      if (currentUserMetadata.currentGUI) {
+        game.jumping = false;
+      } else if (foundCollision) {
         currentUserMetadata.y = new Big((playerChunkY * 16) + (foundCollision.chunkOffset[1] * 16) + foundCollision.block.y - foundCollision.playerHitbox.height);
         game.jumping = false;
         game.lastJump = performance.now();
@@ -350,7 +352,7 @@ function render() {
       moved = true;
     }
 
-    if (game.chunks[`${playerChunkX},${playerChunkY},${playerChunkZ}`] && game.holdingKeys.get("KeyA")) {
+    if (game.chunks[`${playerChunkX},${playerChunkY},${playerChunkZ}`] && !currentUserMetadata.currentGUI && game.holdingKeys.get("KeyA")) {
       var foundCollision = null;
       hitboxsearch:
       for (var chunkOffset of [
@@ -396,7 +398,7 @@ function render() {
         moved = true;
       }
     }
-    if (game.chunks[`${playerChunkX},${playerChunkY},${playerChunkZ}`] && game.holdingKeys.get("KeyD")) {
+    if (game.chunks[`${playerChunkX},${playerChunkY},${playerChunkZ}`] && !currentUserMetadata.currentGUI && game.holdingKeys.get("KeyD")) {
       var foundCollision = null;
       hitboxsearch:
       for (var chunkOffset of [
