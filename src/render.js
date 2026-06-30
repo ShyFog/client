@@ -671,12 +671,12 @@ function render() {
           }
           var breakingBlockType = game.items[block.block]({});
           var requiredTicks = breakingBlockType.hardness;
-          if (breakingBlockType.minMiningLevel < 1 || (currentItem && currentItem.tags.includes(breakingBlockType.correctTool) && currentItem.miningLevel >= breakingBlockType.minMiningLevel)) {
+          if (breakingBlockType.minMiningLevel < 1 || (currentItem && (!breakingBlockType.correctTool || currentItem.tags.includes(breakingBlockType.correctTool)) && currentItem.miningLevel >= breakingBlockType.minMiningLevel)) {
             requiredTicks *= 30;
           } else {
             requiredTicks *= 100;
           }
-          requiredTicks = Math.round(requiredTicks / (currentItem ? currentItem.miningSpeed : 1));
+          requiredTicks = Math.round(requiredTicks / ((currentItem && (!breakingBlockType.correctTool || currentItem.tags.includes(breakingBlockType.correctTool))) ? currentItem.miningSpeed : 1));
           if (breakingBlockType.hardness == -1) {
             ctx.drawImage(getTexture("/block/destroy_stage_0.png"), (Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
           } else {
