@@ -1,5 +1,5 @@
 window.game = {
-  "version": "v0.0.4",
+  "version": "v0.0.5",
   "authServer": "https://shyfog-auth.topcatto8.workers.dev/api",
   "captchaSiteKey": "6LePli8tAAAAABxR-Y8ZfzDCQORwxLSXzbMMKHAl",
   "blockSize": 32,
