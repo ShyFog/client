@@ -693,6 +693,7 @@ function render() {
     var halfHeartTexture = getTexture("/gui/sprites/hud/heart/half.png");
     var fullHeartTexture = getTexture("/gui/sprites/hud/heart/full.png");
     var emptyFoodTexture = getTexture("/gui/sprites/hud/food_empty.png");
+    var halfFoodTexture = getTexture("/gui/sprites/hud/food_half.png");
     var fullFoodTexture = getTexture("/gui/sprites/hud/food_full.png");
     var experienceBarTexture = getTexture("/gui/sprites/hud/experience_bar_background.png");
     var hotbarTexture = getTexture("/gui/sprites/hud/hotbar.png");
@@ -700,24 +701,35 @@ function render() {
 
     if (currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "adventure") {
       // Health
-      // TODO: Make server-controllable
-      const currentHealth = 20;
-      const maxHealth = 20;
-      for (var i = 0; i < maxHealth; i += 2) {
-        ctx.drawImage(heartContainerTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (i / 2 * heartContainerTexture.width * guiScale) - (i / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (heartContainerTexture.height * guiScale), heartContainerTexture.width * guiScale, heartContainerTexture.height * guiScale);
+      for (var i = 0; i < currentUserMetadata.maxHealth; i += 2) {
+        var x = i % 20;
+        var y = Math.floor(i / 20);
+        ctx.drawImage(heartContainerTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (x / 2 * heartContainerTexture.width * guiScale) - (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (heartContainerTexture.height * guiScale) - (y * heartContainerTexture.height * guiScale), heartContainerTexture.width * guiScale, heartContainerTexture.height * guiScale);
       }
-      for (var i = 0; i < currentHealth; i += 2) {
-        if (currentHealth % 2 && i == currentHealth - 1) {
-          ctx.drawImage(halfHeartTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (i / 2 * halfHeartTexture.width * guiScale) - (i / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (halfHeartTexture.height * guiScale), halfHeartTexture.width * guiScale, halfHeartTexture.height * guiScale);
+      for (var i = 0; i < Math.min(currentUserMetadata.health, currentUserMetadata.maxHealth); i += 2) {
+        var x = i % 20;
+        var y = Math.floor(i / 20);
+        if (currentUserMetadata.health % 2 && i == currentUserMetadata.health - 1) {
+          ctx.drawImage(halfHeartTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (x / 2 * halfHeartTexture.width * guiScale) - (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (halfHeartTexture.height * guiScale) - (y * halfHeartTexture.height * guiScale), halfHeartTexture.width * guiScale, halfHeartTexture.height * guiScale);
         } else {
-          ctx.drawImage(fullHeartTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (i / 2 * fullHeartTexture.width * guiScale) - (i / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (fullHeartTexture.height * guiScale), fullHeartTexture.width * guiScale, fullHeartTexture.height * guiScale);
+          ctx.drawImage(fullHeartTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (x / 2 * fullHeartTexture.width * guiScale) - (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (fullHeartTexture.height * guiScale) - (y * fullHeartTexture.height * guiScale), fullHeartTexture.width * guiScale, fullHeartTexture.height * guiScale);
         }
       }
 
       // Hunger
-      for (var i = 0; i < 10; i++) {
-        ctx.drawImage(emptyFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - ((i + 1) * emptyFoodTexture.width * guiScale) + (i * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (emptyFoodTexture.height * guiScale), emptyFoodTexture.width * guiScale, emptyFoodTexture.height * guiScale);
-        ctx.drawImage(fullFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - ((i + 1) * fullFoodTexture.width * guiScale) + (i * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (fullFoodTexture.height * guiScale), fullFoodTexture.width * guiScale, fullFoodTexture.height * guiScale);
+      for (var i = 0; i < currentUserMetadata.maxFood; i += 2) {
+        var x = i % 20;
+        var y = Math.floor(i / 20);
+        ctx.drawImage(emptyFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - (((x / 2) + 1) * emptyFoodTexture.width * guiScale) + (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (emptyFoodTexture.height * guiScale) - (y * emptyFoodTexture.height * guiScale), emptyFoodTexture.width * guiScale, emptyFoodTexture.height * guiScale);
+      }
+      for (var i = 0; i < Math.min(currentUserMetadata.food, currentUserMetadata.maxFood); i += 2) {
+        var x = i % 20;
+        var y = Math.floor(i / 20);
+        if (currentUserMetadata.food % 2 && i == currentUserMetadata.food - 1) {
+          ctx.drawImage(halfFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - (((x / 2) + 1) * halfFoodTexture.width * guiScale) + (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (halfFoodTexture.height * guiScale) - (y * halfFoodTexture.height * guiScale), halfFoodTexture.width * guiScale, halfFoodTexture.height * guiScale);
+        } else {
+          ctx.drawImage(fullFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - (((x / 2) + 1) * fullFoodTexture.width * guiScale) + (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (fullFoodTexture.height * guiScale) - (y * fullFoodTexture.height * guiScale), fullFoodTexture.width * guiScale, fullFoodTexture.height * guiScale);
+        }
       }
 
       // Experience bar
