@@ -684,7 +684,7 @@ function render() {
               game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`][blockId] = null;
               sendPacket(PacketType.BLOCK_BREAK, blockCursorX, blockCursorY, bigToNumber(currentUserMetadata.z));
             }
-            if (game.items[block.block]({}).hardness) {
+            if (requiredTicks) {
               ctx.drawImage(getTexture(`/block/destroy_stage_${Math.round(Math.min(game.breakingBlockTicks, requiredTicks) / requiredTicks * 9)}.png`), (Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
             }
           }
