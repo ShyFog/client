@@ -90,7 +90,6 @@ async function handleServerPacket(message) {
     game.context = game.canvas.getContext("2d");
     game.canvas.addEventListener("mousedown", handleMousedown);
     game.canvas.addEventListener("mouseup", handleMouseup);
-    game.canvas.addEventListener("contextmenu", handleRightClick);
     window.requestAnimationFrame(render);
   }
   if (op == PacketType.WORLD_METADATA) {

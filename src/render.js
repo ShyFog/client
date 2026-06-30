@@ -691,6 +691,42 @@ function render() {
         }
       }
     }
+    if (game.placingBlock && blockId == -1 && (currentUserMetadata.maximumRange == "Infinity" || currentUserMetadata.x.add(new Big("0.5")).sub(new Big(blockCursorX)).pow(2).add(currentUserMetadata.y.add(new Big("1")).sub(new Big(blockCursorY)).pow(2)).sqrt().lte(new Big(currentUserMetadata.maximumRange)))) {
+      if ((currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "creative") && (game.worldMetadata.allowBuildingInVoid || (blockCursorChunkY * 16) + blockCursorRelativeY > game.worldMetadata.voidY) && (game.worldMetadata.worldHeight === null || (blockCursorChunkY * 16) + blockCursorRelativeY <= game.worldMetadata.worldHeight) && currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`] && game.items[currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item]({}).placeable) {
+        var allowed = true;
+        for (var username in game.playerMetadata) {
+          for (var playerHitbox of game.playerMetadata[username].hitboxes) {
+            if (collidesAABB({
+              "x": game.playerMetadata[username].x.add(playerHitbox.x),
+              "y": game.playerMetadata[username].y.add(playerHitbox.y),
+              "width": new Big(playerHitbox.width),
+              "height": new Big(playerHitbox.height)
+            }, {
+              "x": new Big(Math.floor(blockCursorX)),
+              "y": new Big(Math.floor(blockCursorY)),
+              "width": new Big("1"),
+              "height": new Big("1")
+            })) {
+              allowed = false;
+              break;
+            }
+          }
+        }
+        if (allowed) {
+          game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${bigToNumber(currentUserMetadata.z)}`].push({
+            "block": currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item,
+            "x": blockCursorRelativeX,
+            "y": blockCursorRelativeY
+          });
+          if (currentUserMetadata.gamemode != "creative") {
+            if (--currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].count < 1) {
+              currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`] = null;
+            }
+          }
+          sendPacket(PacketType.USE, blockCursorX, blockCursorY, bigToNumber(currentUserMetadata.z));
+        }
+      }
+    }
   }
 
   // Auto-detect GUI scale
@@ -902,91 +938,24 @@ function render() {
   });
 }
 
-function handleMousedown() {
+function handleMousedown(event) {
   if (game.paused) {
     return;
   }
-  game.breakingBlock = true;
-  game.breakingBlockTicks = 0;
+  if (event.button == 0) {
+    game.breakingBlock = true;
+    game.breakingBlockTicks = 0;
+  }
+  if (event.button == 2) {
+    game.placingBlock = true;
+  }
 }
 
-function handleMouseup() {
-  game.breakingBlock = false;
-}
-
-function handleRightClick(event) {
-  if (game.paused) {
-    return;
+function handleMouseup(event) {
+  if (event.button == 0) {
+    game.breakingBlock = false;
   }
-  event.preventDefault();
-  var currentUserMetadata = game.playerMetadata[game.currentUser.username];
-  var cameraX = (game.canvas.width / 2) - (currentUserMetadata.x * game.blockSize) - (game.blockSize / 2);
-  var cameraY = (game.canvas.height / 2) - (currentUserMetadata.y * -game.blockSize) - game.blockSize;
-  var x = (event.clientX - cameraX) / game.blockSize;
-  var y = -((event.clientY - cameraY) / game.blockSize) + 1;
-  var z = Math.floor(currentUserMetadata.z);
-  if (currentUserMetadata.gamemode != "survival" && currentUserMetadata.gamemode != "creative") {
-    return;
+  if (event.button == 2) {
+    game.placingBlock = false;
   }
-  if (currentUserMetadata.maximumRange != "Infinity" && currentUserMetadata.x.add(new Big("0.5")).sub(new Big(x)).pow(2).add(currentUserMetadata.y.add(new Big("1")).sub(new Big(y)).pow(2)).sqrt().gt(new Big(currentUserMetadata.maximumRange))) {
-    return;
-  }
-  var chunkX = Math.floor(x / 16);
-  var chunkY = Math.floor(y / 16);
-  var newBlockX = Math.floor(x) % 16;
-  var newBlockY = Math.floor(y) % 16;
-  if (newBlockX < 0) {
-    newBlockX += 16;
-  }
-  if (newBlockY < 0) {
-    newBlockY += 16;
-  }
-  if (!game.chunks[`${chunkX},${chunkY},${z}`]) {
-    return;
-  }
-  if (!game.worldMetadata.allowBuildingInVoid && (chunkY * 16) + newBlockY <= game.worldMetadata.voidY) {
-    return;
-  }
-  if (game.worldMetadata.worldHeight !== null && (chunkY * 16) + newBlockY > game.worldMetadata.worldHeight) {
-    return;
-  }
-  var blockId = game.chunks[`${chunkX},${chunkY},${z}`].findIndex(block => block && block.x == newBlockX && block.y == newBlockY);
-  if (blockId > -1) {
-    return;
-  }
-  if (!currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`]) {
-    return;
-  }
-  if (!game.items[currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item]({}).placeable) {
-    return;
-  }
-  for (var username in game.playerMetadata) {
-    for (var playerHitbox of game.playerMetadata[username].hitboxes) {
-      if (collidesAABB({
-        "x": game.playerMetadata[username].x.add(playerHitbox.x),
-        "y": game.playerMetadata[username].y.add(playerHitbox.y),
-        "width": new Big(playerHitbox.width),
-        "height": new Big(playerHitbox.height)
-      }, {
-        "x": new Big(Math.floor(x)),
-        "y": new Big(Math.floor(y)),
-        "width": new Big("1"),
-        "height": new Big("1")
-      })) {
-        return;
-      }
-    }
-  }
-  var newBlock = {
-    "block": currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item,
-    "x": newBlockX,
-    "y": newBlockY
-  };
-  game.chunks[`${chunkX},${chunkY},${z}`].push(newBlock);
-  if (currentUserMetadata.gamemode != "creative") {
-    if (--currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].count < 1) {
-      currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`] = null;
-    }
-  }
-  sendPacket(PacketType.USE, x, y, z);
 }
