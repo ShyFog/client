@@ -661,19 +661,31 @@ function render() {
               "z": bigToNumber(currentUserMetadata.z)
             };
             game.breakingBlockTicks = 0;
-          } else if (now - game.lastTick >= 30) {
-            game.lastTick = now - ((now - game.lastTick) % 30);
+          } else if (now - game.lastTick >= 50) {
+            game.lastTick = now - ((now - game.lastTick) % 50);
             game.breakingBlockTicks++;
           }
-          if (game.items[block.block]({}).hardness == -1) {
+          var currentItem = currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`];
+          if (currentItem) {
+            currentItem = game.items[currentItem.item]({});
+          }
+          var breakingBlockType = game.items[block.block]({});
+          var requiredTicks = breakingBlockType.hardness;
+          if (breakingBlockType.minMiningLevel < 1 || (currentItem && currentItem.tags.includes(breakingBlockType.correctTool) && currentItem.miningLevel >= breakingBlockType.minMiningLevel)) {
+            requiredTicks *= 30;
+          } else {
+            requiredTicks *= 100;
+          }
+          requiredTicks = Math.round(requiredTicks / (currentItem ? currentItem.miningSpeed : 1));
+          if (breakingBlockType.hardness == -1) {
             ctx.drawImage(getTexture("/block/destroy_stage_0.png"), (Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
           } else {
-            if (game.breakingBlockTicks >= game.items[block.block]({}).hardness * 100) {
+            if (game.breakingBlockTicks >= requiredTicks) {
               game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`][blockId] = null;
               sendPacket(PacketType.BLOCK_BREAK, blockCursorX, blockCursorY, bigToNumber(currentUserMetadata.z));
             }
             if (game.items[block.block]({}).hardness) {
-              ctx.drawImage(getTexture(`/block/destroy_stage_${Math.round(Math.min(game.breakingBlockTicks, game.items[block.block]({}).hardness * 100) / (game.items[block.block]({}).hardness * 100) * 9)}.png`), (Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
+              ctx.drawImage(getTexture(`/block/destroy_stage_${Math.round(Math.min(game.breakingBlockTicks, requiredTicks) / requiredTicks * 9)}.png`), (Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
             }
           }
         }
