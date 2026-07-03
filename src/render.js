@@ -281,10 +281,14 @@ function render() {
       }
       if (foundCollision) {
         currentUserMetadata.y = new Big((playerChunkY * 16) + (foundCollision.chunkOffset[1] * 16) + foundCollision.block.y + foundCollision.hitbox.y + 1);
-        moved = true;
       } else {
         currentUserMetadata.y = currentUserMetadata.y.sub(4 * game.deltaTime);
-        moved = true;
+      }
+      moved = true;
+      playerChunkY = bigToNumber(bigFloor(currentUserMetadata.y.div(16)));
+      playerChunkPositionY = currentUserMetadata.y.mod(16);
+      if (playerChunkPositionY.lt(0)) {
+        playerChunkPositionY = playerChunkPositionY.add(16);
       }
     }
 
@@ -340,6 +344,11 @@ function render() {
         game.jumping = false;
         game.lastJump = performance.now();
         moved = true;
+        playerChunkY = bigToNumber(bigFloor(currentUserMetadata.y.div(16)));
+        playerChunkPositionY = currentUserMetadata.y.mod(16);
+        if (playerChunkPositionY.lt(0)) {
+          playerChunkPositionY = playerChunkPositionY.add(16);
+        }
       } else {
         currentUserMetadata.y = currentUserMetadata.y.add(7 * game.deltaTime);
         game.jumpedMotion += 7 * game.deltaTime;
@@ -348,8 +357,12 @@ function render() {
           game.lastJump = performance.now();
         }
         moved = true;
+        playerChunkY = bigToNumber(bigFloor(currentUserMetadata.y.div(16)));
+        playerChunkPositionY = currentUserMetadata.y.mod(16);
+        if (playerChunkPositionY.lt(0)) {
+          playerChunkPositionY = playerChunkPositionY.add(16);
+        }
       }
-      moved = true;
     }
 
     if (game.chunks[`${playerChunkX},${playerChunkY},${playerChunkZ}`] && !currentUserMetadata.currentGUI && game.holdingKeys.get("KeyA")) {
