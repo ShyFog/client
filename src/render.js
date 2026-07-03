@@ -661,7 +661,7 @@ function render() {
       for (var i = 0; i < 2; i++) {
         ctx.strokeRect((Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
       }
-      if (game.breakingBlock) {
+      if (game.breakingBlock && !currentUserMetadata.currentGUI) {
         if (currentUserMetadata.gamemode == "creative") {
           game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`][blockId] = null;
           sendPacket(PacketType.BLOCK_BREAK, blockCursorX, blockCursorY, bigToNumber(currentUserMetadata.z));
@@ -704,7 +704,7 @@ function render() {
         }
       }
     }
-    if (game.placingBlock && blockId == -1 && (currentUserMetadata.maximumRange == "Infinity" || currentUserMetadata.x.add(new Big("0.5")).sub(new Big(blockCursorX)).pow(2).add(currentUserMetadata.y.add(new Big("1")).sub(new Big(blockCursorY)).pow(2)).sqrt().lte(new Big(currentUserMetadata.maximumRange)))) {
+    if (game.placingBlock && !currentUserMetadata.currentGUI && blockId == -1 && (currentUserMetadata.maximumRange == "Infinity" || currentUserMetadata.x.add(new Big("0.5")).sub(new Big(blockCursorX)).pow(2).add(currentUserMetadata.y.add(new Big("1")).sub(new Big(blockCursorY)).pow(2)).sqrt().lte(new Big(currentUserMetadata.maximumRange)))) {
       if ((currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "creative") && (game.worldMetadata.allowBuildingInVoid || (blockCursorChunkY * 16) + blockCursorRelativeY > game.worldMetadata.voidY) && (game.worldMetadata.worldHeight === null || (blockCursorChunkY * 16) + blockCursorRelativeY <= game.worldMetadata.worldHeight) && currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`] && game.items[currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item]({}).placeable) {
         var allowed = true;
         for (var username in game.playerMetadata) {
