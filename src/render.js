@@ -863,7 +863,11 @@ function render() {
           var texture = game.items[slotItem.item]({ biome }).texture[0];
           ctx.drawImage(getTexture(texture.file), guiStartX + ((element.x + 1) * guiScale) + (element.width * guiScale * 0.1), guiStartY + ((element.y + 1) * guiScale) + (element.height * guiScale * 0.1), element.width * guiScale * 0.7, element.height * guiScale * 0.7);
           if (slotItem.count != 1) {
-            ctx.fillStyle = "#ffffff";
+            if (slotItem.count > 0) {
+              ctx.fillStyle = "#ffffff";
+            } else {
+              ctx.fillStyle = "#ff0000";
+            }
             ctx.textAlign = "end";
             ctx.font = `${8 * guiScale}px Minecraft`;
             ctx.fillText(slotItem.count.toString(), guiStartX + ((element.x + element.width - 1) * guiScale), guiStartY + ((element.y + element.height - 2) * guiScale));
@@ -903,7 +907,11 @@ function render() {
       var cursorItemSize = guiScale * 18 * 0.7;
       ctx.drawImage(getTexture(cursorItem.texture[0].file), game.cursorX - (cursorItemSize / 2), game.cursorY - (cursorItemSize / 2), cursorItemSize, cursorItemSize);
       if (currentUserMetadata.currentGUI.cursorItem.count != 1) {
-        ctx.fillStyle = "#ffffff";
+        if (currentUserMetadata.currentGUI.cursorItem.count > 0) {
+          ctx.fillStyle = "#ffffff";
+        } else {
+          ctx.fillStyle = "#ff0000";
+        }
         ctx.textAlign = "end";
         ctx.font = `${8 * guiScale}px Minecraft`;
         ctx.fillText(currentUserMetadata.currentGUI.cursorItem.count.toString(), game.cursorX + (cursorItemSize / 2) + (2 * guiScale), game.cursorY + (cursorItemSize / 2));
