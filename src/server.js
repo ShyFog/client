@@ -12,7 +12,8 @@ const PacketType = {
   "HOTBAR_SWITCH": 10,
   "SERVER_TRANSFER": 11,
   "OPEN_INVENTORY": 12,
-  "CLOSE_GUI": 13
+  "CLOSE_GUI": 13,
+  "GUI_CLICK": 14
 };
 
 function sendPacket(...packet) {

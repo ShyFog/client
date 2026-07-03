@@ -862,7 +862,7 @@ function render() {
         if (slotItem) {
           var texture = game.items[slotItem.item]({ biome }).texture[0];
           ctx.drawImage(getTexture(texture.file), guiStartX + ((element.x + 1) * guiScale) + (element.width * guiScale * 0.1), guiStartY + ((element.y + 1) * guiScale) + (element.height * guiScale * 0.1), element.width * guiScale * 0.7, element.height * guiScale * 0.7);
-          if (slotItem.count > 1) {
+          if (slotItem.count != 1) {
             ctx.fillStyle = "#ffffff";
             ctx.textAlign = "end";
             ctx.font = `${8 * guiScale}px Minecraft`;
@@ -874,7 +874,7 @@ function render() {
         }
       }
     }
-    if (hoveringItem) {
+    if (hoveringItem && !currentUserMetadata.currentGUI.cursorItem) {
       ctx.textAlign = "start";
       ctx.font = `${8 * guiScale}px Minecraft`;
       var itemName = game.items[hoveringItem.item]({ biome }).name;
@@ -897,6 +897,17 @@ function render() {
       ctx.fillRect(tooltipX + tooltipWidth, tooltipY + (2 * guiScale), 1 * guiScale, 12 * guiScale);
       ctx.fillStyle = "#ffffff";
       ctx.fillText(itemName, tooltipX + (4 * guiScale), tooltipY + (11 * guiScale));
+    }
+    if (currentUserMetadata.currentGUI.cursorItem) {
+      var cursorItem = game.items[currentUserMetadata.currentGUI.cursorItem.item]({ biome });
+      var cursorItemSize = guiScale * 18 * 0.7;
+      ctx.drawImage(getTexture(cursorItem.texture[0].file), game.cursorX - (cursorItemSize / 2), game.cursorY - (cursorItemSize / 2), cursorItemSize, cursorItemSize);
+      if (currentUserMetadata.currentGUI.cursorItem.count != 1) {
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "end";
+        ctx.font = `${8 * guiScale}px Minecraft`;
+        ctx.fillText(currentUserMetadata.currentGUI.cursorItem.count.toString(), game.cursorX + (cursorItemSize / 2) + (2 * guiScale), game.cursorY + (cursorItemSize / 2));
+      }
     }
   }
 
@@ -961,6 +972,28 @@ function handleMousedown(event) {
   }
   if (event.button == 2) {
     game.placingBlock = true;
+  }
+
+  // Auto-detect GUI scale
+  var guiScale = 1;
+  while(256 * (guiScale + 1) <= Math.min(game.canvas.width, game.canvas.height)) {
+    guiScale++;
+  }
+
+  var currentUserMetadata = game.playerMetadata[game.currentUser.username];
+  if (currentUserMetadata.currentGUI) {
+    var currentGUIData = game.guis[currentUserMetadata.currentGUI.id];
+    var guiBackground = getTexture(currentGUIData.background);
+    var guiBackgroundWidth = (currentGUIData.backgroundWidth || guiBackground.width);
+    var guiBackgroundHeight = (currentGUIData.backgroundHeight || guiBackground.height);
+    var guiStartX = (game.canvas.width / 2) - (guiBackgroundWidth * guiScale / 2);
+    var guiStartY = (game.canvas.height / 2) - (guiBackgroundHeight * guiScale / 2);
+    for (var element of currentGUIData.content) {
+      var hovering = game.cursorX >= guiStartX + (element.x * guiScale) && game.cursorY >= guiStartY + (element.y * guiScale) && game.cursorX <= guiStartX + ((element.x + element.width) * guiScale) && game.cursorY <= guiStartY + ((element.y + element.height) * guiScale);
+      if (["player_slot", "block_slot", "world_slot"].includes(element.type) && hovering) {
+        sendPacket(PacketType.GUI_CLICK, event.button, element.type, element.slot);
+      }
+    }
   }
 }
 

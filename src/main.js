@@ -155,6 +155,9 @@ window.addEventListener("wheel", event => {
   }
   var delta = Math.max(-1, Math.min(event.deltaY, 1));
   if (game.currentUser && game.playerMetadata[game.currentUser.username]) {
+    if (game.playerMetadata[game.currentUser.username].currentGUI) {
+      return;
+    }
     game.playerMetadata[game.currentUser.username].selectedHotbarSlot += delta;
     if (game.playerMetadata[game.currentUser.username].selectedHotbarSlot < 0) {
       game.playerMetadata[game.currentUser.username].selectedHotbarSlot = 8;
