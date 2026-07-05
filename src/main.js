@@ -23,6 +23,7 @@ window.game = {
   "preventDebug": false,
   "lastJump": -Infinity,
   "coyoteTime": -Infinity,
+  "lastBlockAction": -Infinity,
   "serverSoftware": "",
   "serverVersion": "",
   "breakingBlock": false,
