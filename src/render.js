@@ -704,40 +704,44 @@ function render() {
         }
       }
     }
-    if (game.placingBlock && !currentUserMetadata.currentGUI && blockId == -1 && (currentUserMetadata.maximumRange == "Infinity" || currentUserMetadata.x.add(new Big("0.5")).sub(new Big(blockCursorX)).pow(2).add(currentUserMetadata.y.add(new Big("1")).sub(new Big(blockCursorY)).pow(2)).sqrt().lte(new Big(currentUserMetadata.maximumRange)))) {
-      if ((currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "creative") && (game.worldMetadata.allowBuildingInVoid || (blockCursorChunkY * 16) + blockCursorRelativeY > game.worldMetadata.voidY) && (game.worldMetadata.worldHeight === null || (blockCursorChunkY * 16) + blockCursorRelativeY <= game.worldMetadata.worldHeight) && currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`] && game.items[currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item]({}).placeable) {
-        var allowed = true;
-        for (var username in game.playerMetadata) {
-          for (var playerHitbox of game.playerMetadata[username].hitboxes) {
-            if (collidesAABB({
-              "x": game.playerMetadata[username].x.add(playerHitbox.x),
-              "y": game.playerMetadata[username].y.add(playerHitbox.y),
-              "width": new Big(playerHitbox.width),
-              "height": new Big(playerHitbox.height)
-            }, {
-              "x": new Big(Math.floor(blockCursorX)),
-              "y": new Big(Math.floor(blockCursorY)),
-              "width": new Big("1"),
-              "height": new Big("1")
-            })) {
-              allowed = false;
-              break;
+    if (game.placingBlock && !currentUserMetadata.currentGUI && (currentUserMetadata.maximumRange == "Infinity" || currentUserMetadata.x.add(new Big("0.5")).sub(new Big(blockCursorX)).pow(2).add(currentUserMetadata.y.add(new Big("1")).sub(new Big(blockCursorY)).pow(2)).sqrt().lte(new Big(currentUserMetadata.maximumRange)))) {
+      if (blockId == -1) {
+        if ((currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "creative") && (game.worldMetadata.allowBuildingInVoid || (blockCursorChunkY * 16) + blockCursorRelativeY > game.worldMetadata.voidY) && (game.worldMetadata.worldHeight === null || (blockCursorChunkY * 16) + blockCursorRelativeY <= game.worldMetadata.worldHeight) && currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`] && game.items[currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item]({}).placeable) {
+          var allowed = true;
+          for (var username in game.playerMetadata) {
+            for (var playerHitbox of game.playerMetadata[username].hitboxes) {
+              if (collidesAABB({
+                "x": game.playerMetadata[username].x.add(playerHitbox.x),
+                "y": game.playerMetadata[username].y.add(playerHitbox.y),
+                "width": new Big(playerHitbox.width),
+                "height": new Big(playerHitbox.height)
+              }, {
+                "x": new Big(Math.floor(blockCursorX)),
+                "y": new Big(Math.floor(blockCursorY)),
+                "width": new Big("1"),
+                "height": new Big("1")
+              })) {
+                allowed = false;
+                break;
+              }
             }
           }
-        }
-        if (allowed) {
-          game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${bigToNumber(currentUserMetadata.z)}`].push({
-            "block": currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item,
-            "x": blockCursorRelativeX,
-            "y": blockCursorRelativeY
-          });
-          if (currentUserMetadata.gamemode != "creative") {
-            if (--currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].count < 1) {
-              currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`] = null;
+          if (allowed) {
+            game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${bigToNumber(currentUserMetadata.z)}`].push({
+              "block": currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item,
+              "x": blockCursorRelativeX,
+              "y": blockCursorRelativeY
+            });
+            if (currentUserMetadata.gamemode != "creative") {
+              if (--currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].count < 1) {
+                currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`] = null;
+              }
             }
+            sendPacket(PacketType.USE, blockCursorX, blockCursorY, bigToNumber(currentUserMetadata.z));
           }
-          sendPacket(PacketType.USE, blockCursorX, blockCursorY, bigToNumber(currentUserMetadata.z));
         }
+      } else {
+        sendPacket(PacketType.USE, blockCursorX, blockCursorY, bigToNumber(currentUserMetadata.z));
       }
     }
   }
