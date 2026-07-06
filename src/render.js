@@ -119,9 +119,24 @@ function leavesTint(name, texture, biome) {
 }
 
 function render() {
-  var { canvas, context: ctx, blockSize, renderDistance } = game;
+  var { canvas, context: ctx } = game;
+  var { blockSize, renderDistance, antiAliasing, guiScale } = game.settings;
+  if (antiAliasing == "OFF") {
+    antiAliasing = 1;
+  } else {
+    antiAliasing = parseFloat(antiAliasing.slice(1));
+  }
   if (!canvas || !ctx) {
     return;
+  }
+  if (guiScale == "Auto") {
+    // Auto-detect GUI scale
+    guiScale = 1;
+    while(256 * (guiScale + 1) <= Math.min(canvas.width, canvas.height)) {
+      guiScale++;
+    }
+  } else {
+    guiScale = parseFloat(guiScale.slice(1));
   }
 
   // Global settings
@@ -581,9 +596,8 @@ function render() {
           if ((((chunkX * 16) + block.x) * blockSize) + cameraX > canvas.width || (((chunkY * -16) - block.y) * blockSize) + cameraY > canvas.height || (((chunkX * 16) + block.x) * blockSize) + cameraX + blockSize < 0 || (((chunkY * -16) - block.y) * blockSize) + cameraY + blockSize < 0) {
             continue;
           }
-          // Draw two times to fix aliasing
-          // TODO: Some users still have aliasing issues (?)
-          for (var i = 0; i < 2; i++) {
+          // Draw multiple times to fix aliasing (?)
+          for (var i = 0; i < antiAliasing; i++) {
             for (var texture of blockData.texture) {
               ctx.drawImage(getTexture(texture.file), (((chunkX * 16) + block.x + texture.x) * blockSize) + cameraX, (((chunkY * -16) - block.y - texture.y) * blockSize) + cameraY, texture.width * blockSize, texture.height * blockSize);
             }
@@ -608,9 +622,9 @@ function render() {
 
   // Render player nametags
   for (var username in game.playerMetadata) {
-    if (username != game.currentUser.username && game.playerMetadata[username].gamemode != "spectator") {
+    if ((game.settings.showOwnNametag == "ON" || username != game.currentUser.username) && game.playerMetadata[username].gamemode != "spectator") {
       ctx.textAlign = "center";
-      ctx.font = "10px Minecraft";
+      ctx.font = `${blockSize * 0.3125}px Minecraft`;
       ctx.fillStyle = "#000000";
       ctx.save();
       ctx.globalAlpha = 0.5;
@@ -622,20 +636,22 @@ function render() {
   }
 
   // Vignette effect
-  var g = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  g.addColorStop(0, "rgba(0,0,0,0)");
-  g.addColorStop(0.72, "rgba(0,0,0,0)");
-  g.addColorStop(1, "rgba(0,0,0,1)");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  var g2 = ctx.createRadialGradient(
-    canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.3,
-    canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) * 0.75
-  );
-  g2.addColorStop(0, "rgba(0,0,0,0)");
-  g2.addColorStop(0.9, "rgba(0,0,0,1)");
-  ctx.fillStyle = g2;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  if (game.settings.vignette == "ON") {
+    var g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    g.addColorStop(0, "rgba(0,0,0,0)");
+    g.addColorStop(0.72, "rgba(0,0,0,0)");
+    g.addColorStop(1, "rgba(0,0,0,1)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    var g2 = ctx.createRadialGradient(
+      canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.3,
+      canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) * 0.75
+    );
+    g2.addColorStop(0, "rgba(0,0,0,0)");
+    g2.addColorStop(0.9, "rgba(0,0,0,1)");
+    ctx.fillStyle = g2;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
 
   var blockCursorX = (game.cursorX - cameraX) / blockSize;
   var blockCursorY = -((game.cursorY - cameraY) / blockSize) + 1;
@@ -746,12 +762,6 @@ function render() {
         sendPacket(PacketType.USE, blockCursorX, blockCursorY, bigToNumber(currentUserMetadata.z));
       }
     }
-  }
-
-  // Auto-detect GUI scale
-  var guiScale = 1;
-  while(256 * (guiScale + 1) <= Math.min(canvas.width, canvas.height)) {
-    guiScale++;
   }
 
   // HUD
@@ -988,10 +998,15 @@ function handleMousedown(event) {
     game.placingBlock = true;
   }
 
-  // Auto-detect GUI scale
-  var guiScale = 1;
-  while(256 * (guiScale + 1) <= Math.min(game.canvas.width, game.canvas.height)) {
-    guiScale++;
+  var { guiScale } = game.settings;
+  if (guiScale == "Auto") {
+    // Auto-detect GUI scale
+    guiScale = 1;
+    while(256 * (guiScale + 1) <= Math.min(game.canvas.width, game.canvas.height)) {
+      guiScale++;
+    }
+  } else {
+    guiScale = parseFloat(guiScale.slice(1));
   }
 
   var currentUserMetadata = game.playerMetadata[game.currentUser.username];

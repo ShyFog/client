@@ -2,7 +2,6 @@ window.game = {
   "version": "v0.0.5",
   "authServer": "https://shyfog-auth.topcatto8.workers.dev/api",
   "captchaSiteKey": "6LePli8tAAAAABxR-Y8ZfzDCQORwxLSXzbMMKHAl",
-  "blockSize": 32,
   "canvas": null,
   "context": null,
   "chunks": {},
@@ -14,7 +13,6 @@ window.game = {
   "debugMode": false,
   "debugModeChunks": false,
   "debugModeHitboxes": false,
-  "renderDistance": 2,
   "deltaTime": 0,
   "prevFrame": 0,
   "times": [],
@@ -30,7 +28,50 @@ window.game = {
   "breakingBlockCache": {},
   "breakingBlockTicks": 0,
   "lastTick": 0,
-  "currentGUI": null
+  "currentGUI": null,
+  "settingsSchema": [{
+    "property": "vignette",
+    "type": "toggle",
+    "name": "Vignette",
+    "options": ["ON", "OFF"],
+    "default": "ON"
+  }, {
+    "property": "autoPause",
+    "type": "toggle",
+    "name": "Auto-pause",
+    "options": ["ON", "OFF"],
+    "default": "ON"
+  }, {
+    "property": "showOwnNametag",
+    "type": "toggle",
+    "name": "Show Own Nametag",
+    "options": ["ON", "OFF"],
+    "default": "OFF"
+  }, {
+    "property": "guiScale",
+    "type": "toggle",
+    "name": "GUI Scale",
+    "options": ["Auto", "x1", "x2", "x3", "x4", "x5"],
+    "default": "Auto"
+  }, {
+    "property": "antiAliasing",
+    "type": "toggle",
+    "name": "Anti-aliasing",
+    "options": ["OFF", "x2", "x4", "x8"],
+    "default": "x2"
+  }, {
+    "property": "blockSize",
+    "type": "input",
+    "name": "Block Size",
+    "inputType": "number",
+    "default": 32
+  }, {
+    "property": "renderDistance",
+    "type": "input",
+    "name": "Render Distance",
+    "inputType": "number",
+    "default": 2
+  }]
 };
 
 function resetState() {
@@ -81,6 +122,7 @@ window.addEventListener("keydown", event => {
     } else {
       game.paused = !game.paused;
       game.canvas.style.filter = (game.paused ? "blur(4px)" : "");
+      pauseMenu();
       document.querySelector("#main-menu").style.display = (game.paused ? "flex" : "none");
     }
   }
@@ -174,7 +216,7 @@ window.addEventListener("wheel", event => {
 window.addEventListener("visibilitychange", () => {
   if (document.visibilityState == "visible") {
     game.prevFrame = performance.now();
-  } else if (game.canvas) {
+  } else if (game.canvas && game.settings.autoPause == "ON") {
     game.paused = true;
     game.canvas.style.filter = "blur(4px)";
     document.querySelector("#main-menu").style.display = "flex";
@@ -249,12 +291,13 @@ function mainMenu() {
     <br />
     <div class="button disabled" id="singleplayer" style="width: 200px;">Singleplayer</div>
     <div class="button" id="multiplayer" style="width: 200px;">Multiplayer</div>
-    <div class="button disabled" id="settings" style="width: 200px;">Settings</div>
+    <div class="button" id="settings" style="width: 200px;">Settings</div>
     <br />
     <br />
     <p style="margin: 0;">Logged in as <span class="skin-preview"><span class="skin-preview-layer skin-preview-layer1"></span><span class="skin-preview-layer skin-preview-layer2"></span><span class="skin-preview-layer skin-preview-layer3"></span></span> <a>${game.currentUser.username.split("<").join("&lt;").split(">").join("&gt;")}</a>${game.currentUser.token ? "" : ` <img src="offline.png" width="20px" height="20px" style="vertical-align: middle; cursor: help; margin-bottom: 3px;" title="Offline" />`} <img src="switch-user.png" width="20px" height="20px" style="vertical-align: middle; cursor: pointer; margin-bottom: 3px;" id="switch-user" title="Switch User" /></p>
   `;
   document.querySelector("#multiplayer").addEventListener("click", multiplayerMenu);
+  document.querySelector("#settings").addEventListener("click", settingsMenu);
   document.querySelector(".skin-preview-layer2").style.backgroundImage = `url("${game.currentUser.skin}")`;
   document.querySelector(".skin-preview-layer3").style.backgroundImage = `url("${game.currentUser.skin}")`;
   document.querySelector("#switch-user").addEventListener("click", accountsMenu);
@@ -349,6 +392,68 @@ function multiplayerMenu() {
   }
   for (var index = 0; index < game.servers.length; index++) {
     probeServer(index);
+  }
+}
+
+function settingsMenu() {
+  document.querySelector("#main-menu").innerHTML = `
+    <font size="6">Settings</font>
+    <br />
+    ${game.settingsSchema.map((setting, index) => {
+      if (setting.type == "toggle") {
+        return `
+          <div class="button" id="setting-${index}" style="width: 210px;">${setting.name}: ${game.settings[setting.property]}</div>
+        `;
+      }
+      if (setting.type == "input") {
+        return `
+          <div class="button" id="setting-${index}" style="width: 210px;">${setting.name}: <input type="${setting.inputType}" value="${game.settings[setting.property]}" style="width: ${Math.max(1, game.settings[setting.property].toString().length)}ch;" required /></div>
+        `;
+      }
+      return "";
+    }).join("")}
+    <br />
+    <br />
+    <div class="button" id="done" style="width: 150px;">Done</div>
+  `;
+  document.querySelector("#done").addEventListener("click", () => {
+    if (game.canvas && game.context) {
+      pauseMenu();
+    } else {
+      mainMenu();
+    }
+  });
+  function registerSetting(index) {
+    var setting = game.settingsSchema[index];
+    if (setting.type == "toggle") {
+      document.querySelector(`#setting-${index}`).addEventListener("click", () => {
+        var currentOptionIndex = setting.options.indexOf(game.settings[setting.property]);
+        if (++currentOptionIndex >= setting.options.length) {
+          currentOptionIndex = 0;
+        }
+        game.settings[setting.property] = setting.options[currentOptionIndex];
+        localStorage.setItem("ShyFog_settings", JSON.stringify(game.settings));
+        document.querySelector(`#setting-${index}`).innerText = `${setting.name}: ${game.settings[setting.property]}`;
+      });
+    }
+    if (setting.type == "input") {
+      document.querySelector(`#setting-${index}`).addEventListener("click", () => {
+        document.querySelector(`#setting-${index} input`).focus();
+      });
+      document.querySelector(`#setting-${index} input`).addEventListener("input", () => {
+        document.querySelector(`#setting-${index} input`).style.width = `${Math.max(1, document.querySelector(`#setting-${index} input`).value.length)}ch`;
+      });
+      document.querySelector(`#setting-${index} input`).addEventListener("change", () => {
+        game.settings[setting.property] = document.querySelector(`#setting-${index} input`).value;
+        if (setting.inputType == "number") {
+          game.settings[setting.property] = parseFloat(game.settings[setting.property] || "0");
+        }
+        localStorage.setItem("ShyFog_settings", JSON.stringify(game.settings));
+      });
+    }
+  }
+  for (var index = 0; index < game.settingsSchema.length; index++) {
+    registerSetting(index);
   }
 }
 
@@ -457,7 +562,7 @@ function pauseMenu() {
     <font size="6">Paused</font>
     <br />
     <div class="button" id="resume" style="width: 200px;">Resume</div>
-    <div class="button disabled" id="settings" style="width: 200px;">Settings</div>
+    <div class="button" id="settings" style="width: 200px;">Settings</div>
     <div class="button" id="leave" style="width: 200px;">Leave</div>
   `;
   document.querySelector("#resume").addEventListener("click", () => {
@@ -465,6 +570,7 @@ function pauseMenu() {
     game.canvas.style.filter = "";
     document.querySelector("#main-menu").style.display = "none";
   });
+  document.querySelector("#settings").addEventListener("click", settingsMenu);
   document.querySelector("#leave").addEventListener("click", () => game.ws.close(1000, "Disconnected"));
 }
 
@@ -575,6 +681,7 @@ async function proceed(type) {
 window.addEventListener("DOMContentLoaded", () => {
   game.accounts = [];
   game.currentAccount = 0;
+  game.settings = {};
   if (localStorage.getItem("ShyFog_accounts")) {
     try {
       game.accounts = JSON.parse(localStorage.getItem("ShyFog_accounts"));
@@ -586,6 +693,12 @@ window.addEventListener("DOMContentLoaded", () => {
       game.currentAccount = 0;
     }
   }
+  if (localStorage.getItem("ShyFog_settings")) {
+    try {
+      game.settings = JSON.parse(localStorage.getItem("ShyFog_settings"));
+    } catch {}
+  }
+  game.settings = Object.assign(Object.fromEntries(game.settingsSchema.map(setting => [setting.property, setting.default])), game.settings);
   game.currentUser = game.accounts[game.currentAccount];
   game.servers = [];
   if (localStorage.getItem("ShyFog_servers")) {

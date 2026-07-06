@@ -293,12 +293,23 @@ input[type=checkbox] {
   cursor: pointer;
 }
 
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
 /* Buttons */
 .button {
   background-color: #000000;
   color: white;
   padding: 8px 25px;
-  border: 1px solid #28f0e5;
+  border: 2px solid #57ffe1;
   border-radius: 5px;
   cursor: pointer;
   font-family: Verdana;
@@ -306,6 +317,20 @@ input[type=checkbox] {
 }
 
 .button.disabled {
-  border: 1px solid #30afa9;
+  border: 2px solid #30afa9;
   cursor: not-allowed;
+}
+
+.button:has(input) {
+  border: 2px solid #b88fb8;
+  cursor: text;
+}
+
+.button input {
+  padding: 0;
+  font-size: 16px;
+}
+
+.button input:focus {
+  border: 1px solid #000000;
 }
