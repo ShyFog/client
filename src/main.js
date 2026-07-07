@@ -71,7 +71,8 @@ window.game = {
     "name": "Render Distance",
     "inputType": "number",
     "default": 2
-  }]
+  }],
+  "chatMessages": []
 };
 
 function resetState() {
@@ -90,6 +91,7 @@ function resetState() {
   game.serverSoftware = "";
   game.serverVersion = "";
   game.paused = false;
+  game.chatMessages = [];
 }
 
 // Handle window resizing

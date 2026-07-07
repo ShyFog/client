@@ -833,6 +833,23 @@ function render() {
     ctx.drawImage(hotbarSelectionTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (20 * guiScale * currentUserMetadata.selectedHotbarSlot) - guiScale, canvas.height - (hotbarTexture.height * guiScale) - guiScale, hotbarSelectionTexture.width * guiScale, hotbarSelectionTexture.height * guiScale); 
   }
 
+  // Chat
+  var chatMessages = game.chatMessages.filter(message => Date.now() - message.time <= 12000);
+  const chatScale = 5;
+  const chatWidth = 0.3;
+  ctx.textAlign = "start";
+  ctx.font = `${chatScale * guiScale}px Minecraft`;
+  ctx.fillStyle = "#000000";
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  ctx.fillRect(0, canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (heartContainerTexture.height * guiScale) - (chatScale * guiScale) - (2 * guiScale) - ((chatScale + 4) * guiScale * (chatMessages.length - 1)), canvas.width * chatWidth, (chatScale + 4) * guiScale * chatMessages.length);
+  ctx.restore();
+  for (var messageIndex = 0; messageIndex < chatMessages.length; messageIndex++) {
+    var message = chatMessages[messageIndex];
+    ctx.fillStyle = (message.color || "#ffffff");
+    ctx.fillText(message.content, 10, canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (heartContainerTexture.height * guiScale) - ((chatScale + 4) * guiScale * (chatMessages.length - messageIndex - 1)));
+  }
+
   if (currentUserMetadata.currentGUI) {
     ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);

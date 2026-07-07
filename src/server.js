@@ -13,7 +13,8 @@ const PacketType = {
   "SERVER_TRANSFER": 11,
   "OPEN_INVENTORY": 12,
   "CLOSE_GUI": 13,
-  "GUI_CLICK": 14
+  "GUI_CLICK": 14,
+  "CHAT_MESSAGE": 15
 };
 
 function sendPacket(...packet) {
@@ -121,6 +122,13 @@ async function handleServerPacket(message) {
     game.serverTransferInProgress = true;
     game.ws.close(1000, "Disconnected");
     connectServer(data[0], data[1]);
+  }
+  if (op == PacketType.CHAT_MESSAGE) {
+    data.forEach(chatMessage => {
+      game.chatMessages.push(Object.assign(chatMessage, {
+        "time": Date.now()
+      }));
+    });
   }
 }
 
