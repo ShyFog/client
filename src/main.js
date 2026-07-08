@@ -721,3 +721,5 @@ window.addEventListener("DOMContentLoaded", () => {
   }
   mainMenu();
 });
+
+window.ShyFog = {};
