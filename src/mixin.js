@@ -1,12 +1,12 @@
-ShyFog.Mixin = class {
+ShyFog.Client.Mixin = class {
+  constructor() {
+    ShyFog.Client.log("INFO", `Mixin created: ${this.constructor.name}`);
+  }
   inject({ target, at, method }) {
-    try {
-      var originalTarget = eval(target);
-    } catch {
-      throw `Mixin injection failed: Invalid target "${target}".`;
-    }
+    ShyFog.Client.log("INFO", `Injecting mixin "${this.constructor.name}" into ${target}@${at}...`);
+    var originalTarget = ShyFog.Client[target];
     if (typeof originalTarget !== "function") {
-      throw `Mixin injection failed: Target "${target}" is not a function.`;
+      return ShyFog.Client.log("ERROR", `Invalid target ${target}@${at} to inject`);
     }
     function fakeTarget(...args) {
       var result = {};
@@ -14,7 +14,7 @@ ShyFog.Mixin = class {
         result = method(...args) || result;
       }
       if (result.cancel) {
-        return;
+        return result.returnValue;
       }
       var originalResult = originalTarget(...(result.args || args));
       if (at == "TAIL") {
@@ -22,10 +22,7 @@ ShyFog.Mixin = class {
       }
       return (result.returnValue || originalResult);
     }
-    try {
-      eval(`${target} = fakeTarget;`);
-    } catch {
-      throw "Mixin injection failed: Failed to inject.";
-    }
+    ShyFog.Client[target] = fakeTarget;
+    ShyFog.Client.log("INFO", "Injection success");
   }
 };

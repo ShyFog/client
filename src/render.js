@@ -1,62 +1,27 @@
-function bigMin(...values) {
-  var min = values[0];
-  for (var i = 1; i < values.length; i++) {
-    if (values[i].lt(min)) {
-      min = values[i];
-    }
-  }
-  return min;
-}
+ShyFog.Client.defaultValues.canvas = null;
+ShyFog.Client.defaultValues.context = null;
+ShyFog.Client.defaultValues.paused = false;
+ShyFog.Client.defaultValues.deltaTime = 0;
+ShyFog.Client.defaultValues.prevFrame = 0;
+ShyFog.Client.defaultValues.times = [];
+ShyFog.Client.resetState();
 
-function bigFloor(x) {
-  return x.lt(0) ? x.round(0, Big.roundDown).minus(x.eq(x.round(0, Big.roundDown)) ? 0 : 1) : x.round(0, Big.roundDown);
-}
-
-function bigToNumber(x) {
-  return parseFloat(x.toString());
-}
-
-function collidesAABB(a, b, edgeX, edgeY) {
-  var result = false;
-  if (edgeX && edgeY) {
-    result = a.x.lte(b.x.add(b.width)) && a.x.add(a.width).gte(b.x) && a.y.gte(b.y.sub(b.height)) && a.y.sub(a.height).lte(b.y);
-  } else if (edgeX) {
-    result = a.x.lte(b.x.add(b.width)) && a.x.add(a.width).gte(b.x) && a.y.gt(b.y.sub(b.height)) && a.y.sub(a.height).lt(b.y);
-  } else if (edgeY) {
-    result = a.x.lt(b.x.add(b.width)) && a.x.add(a.width).gt(b.x) && a.y.gte(b.y.sub(b.height)) && a.y.sub(a.height).lte(b.y);
-  } else {
-    result = a.x.lt(b.x.add(b.width)) && a.x.add(a.width).gt(b.x) && a.y.gt(b.y.sub(b.height)) && a.y.sub(a.height).lt(b.y);
+// Handle window resizing
+window.addEventListener("resize", () => {
+  if (ShyFog.Client.canvas) {
+    ShyFog.Client.canvas.width = window.innerWidth;
+    ShyFog.Client.canvas.height = window.innerHeight;
   }
-  if (!result) {
-    return result;
-  }
-  var overlapLeft = a.x.add(a.width).sub(b.x);
-  var overlapRight = b.x.add(b.width).sub(a.x);
-  var overlapTop = a.y.sub(b.y.sub(b.height));
-  var overlapBottom = b.y.sub(a.y.sub(a.height));
-  var minOverlap = bigMin(overlapLeft, overlapRight, overlapTop, overlapBottom);
-  if (minOverlap.eq(overlapTop)) {
-    return "top";
-  }
-  if (minOverlap.eq(overlapBottom)) {
-    return "bottom";
-  }
-  if (minOverlap.eq(overlapLeft)) {
-    return "left";
-  }
-  if (minOverlap.eq(overlapRight)) {
-    return "right";
-  }
-}
+});
 
 // Helper to make fake textures that are adding a tint to a real texture
-function tintedTexture(fakeFile, realFile, tint) {
+ShyFog.Client.tintedTexture = (fakeFile, realFile, tint) => {
   // Already cached
-  if (hasTexture(fakeFile)) {
+  if (ShyFog.Client.hasTexture(fakeFile)) {
     return fakeFile;
   }
 
-  var img = getTexture(realFile);
+  var img = ShyFog.Client.getTexture(realFile);
 
   // Texture not loaded yet
   if (!img.complete) {
@@ -88,11 +53,11 @@ function tintedTexture(fakeFile, realFile, tint) {
 
   ctx.putImageData(imageData, 0, 0);
 
-  saveTexture(fakeFile, tempCanvas.toDataURL());
+  ShyFog.Client.saveTexture(fakeFile, tempCanvas.toDataURL());
   return fakeFile;
-}
+};
 
-function grassTint(name, texture, biome) {
+ShyFog.Client.grassTint = (name, texture, biome) => {
   var color = [0, 0, 0];
   switch(biome) {
     case "shyfog:plains":
@@ -102,10 +67,10 @@ function grassTint(name, texture, biome) {
       color = [200, 255, 0];
       break;
   }
-  return tintedTexture(`/dynamic/${name}/${biome}`, texture, color);
-}
+  return ShyFog.Client.tintedTexture(`/dynamic/${name}/${biome}`, texture, color);
+};
 
-function leavesTint(name, texture, biome) {
+ShyFog.Client.leavesTint = (name, texture, biome) => {
   var color = [0, 0, 0];
   switch(biome) {
     case "shyfog:plains":
@@ -115,12 +80,12 @@ function leavesTint(name, texture, biome) {
       color = [200, 200, 0];
       break;
   }
-  return tintedTexture(`/dynamic/${name}/${biome}`, texture, color);
-}
+  return ShyFog.Client.tintedTexture(`/dynamic/${name}/${biome}`, texture, color);
+};
 
-function render() {
-  var { canvas, context: ctx } = game;
-  var { blockSize, renderDistance, antiAliasing, guiScale } = game.settings;
+ShyFog.Client.render = () => {
+  var { canvas, context: ctx } = ShyFog.Client;
+  var { blockSize, renderDistance, antiAliasing, guiScale, showOwnNametag, vignette } = ShyFog.Client.settings;
   if (antiAliasing == "OFF") {
     antiAliasing = 1;
   } else {
@@ -144,27 +109,20 @@ function render() {
   ctx.lineWidth = 2;
 
   // Clear everything by rendering the sky
-  ctx.fillStyle = (game.worldMetadata.skyColor || "#000000");
+  ctx.fillStyle = (ShyFog.Client.worldMetadata.skyColor || "#000000");
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Haven't received PLAYER_METADATA packet yet, just wait
-  var currentUserMetadata = game.playerMetadata[game.currentUser.username];
-  if (!currentUserMetadata) {
-    return window.requestAnimationFrame(render);
+  var currentUser = ShyFog.Client.players[ShyFog.Client.user.username];
+  if (!currentUser) {
+    return window.requestAnimationFrame(ShyFog.Client.render);
   }
 
-  var playerSpeed = (5 * game.deltaTime);
-  if (game.holdingKeys.get("ShiftLeft")) {
-    playerSpeed = (2 * game.deltaTime);
-  }
-  if (game.holdingKeys.get("ControlLeft")) {
-    playerSpeed = (7 * game.deltaTime);
-  }
-  var playerChunkX = bigToNumber(bigFloor(currentUserMetadata.x.div(16)));
-  var playerChunkY = bigToNumber(bigFloor(currentUserMetadata.y.div(16)));
-  var playerChunkZ = bigToNumber(currentUserMetadata.z);
-  var playerChunkPositionX = currentUserMetadata.x.mod(16);
-  var playerChunkPositionY = currentUserMetadata.y.mod(16);
+  var playerChunkX = ShyFog.Client.bigToNumber(ShyFog.Client.bigFloor(currentUser.x.div(16)));
+  var playerChunkY = ShyFog.Client.bigToNumber(ShyFog.Client.bigFloor(currentUser.y.div(16)));
+  var playerChunkZ = ShyFog.Client.bigToNumber(currentUser.z);
+  var playerChunkPositionX = currentUser.x.mod(16);
+  var playerChunkPositionY = currentUser.y.mod(16);
   if (playerChunkPositionX.lt(0)) {
     playerChunkPositionX = playerChunkPositionX.add(16);
   }
@@ -172,11 +130,11 @@ function render() {
     playerChunkPositionY = playerChunkPositionY.add(16);
   }
   var biome = null;
-  var currentBiomeRange = bigToNumber(bigFloor(playerChunkPositionX));
-  if (!game.biomes[`${playerChunkX},${playerChunkY},${playerChunkZ}`]) {
-    return window.requestAnimationFrame(render);
+  var currentBiomeRange = ShyFog.Client.bigToNumber(ShyFog.Client.bigFloor(playerChunkPositionX));
+  if (!ShyFog.Client.biomes[`${playerChunkX},${playerChunkY},${playerChunkZ}`]) {
+    return window.requestAnimationFrame(ShyFog.Client.render);
   }
-  for (var biomeRange of game.biomes[`${playerChunkX},${playerChunkY},${playerChunkZ}`]) {
+  for (var biomeRange of ShyFog.Client.biomes[`${playerChunkX},${playerChunkY},${playerChunkZ}`]) {
     var [ start, end, type ] = biomeRange;
     if (currentBiomeRange >= start && currentBiomeRange <= end) {
       biome = type;
@@ -184,315 +142,15 @@ function render() {
     }
   }
 
-  var moved = false;
-  if (["creative", "spectator"].includes(currentUserMetadata.gamemode)) {
-    if (game.holdingKeys.get("Space")) {
-      currentUserMetadata.y = currentUserMetadata.y.add(3 * game.deltaTime);
-      moved = true;
-    }
-    if (game.holdingKeys.get("KeyA")) {
-      currentUserMetadata.x = currentUserMetadata.x.sub(playerSpeed);
-      moved = true;
-    }
-    if (game.holdingKeys.get("KeyD")) {
-      currentUserMetadata.x = currentUserMetadata.x.add(playerSpeed);
-      moved = true;
-    }
-    if (game.holdingKeys.get("ShiftLeft")) {
-      currentUserMetadata.y = currentUserMetadata.y.sub(3 * game.deltaTime);
-      moved = true;
-    }
-  } else {
-    // Gravity
-    if (game.chunks[`${playerChunkX},${playerChunkY},${playerChunkZ}`] && ["survival", "adventure"].includes(currentUserMetadata.gamemode)) {
-      game.wasOnGround = game.onGround;
-      game.onGround = false;
-      hitboxsearch:
-      for (var chunkOffset of [
-        [0, 0, 0],
-        [-1, 0, 0],
-        [1, 0, 0],
-        [0, -1, 0],
-        [-1, -1, 0],
-        [1, -1, 0]
-      ]) {
-        if (!game.chunks[`${playerChunkX + chunkOffset[0]},${playerChunkY + chunkOffset[1]},${playerChunkZ + chunkOffset[2]}`]) {
-          continue;
-        }
-        for (var block of game.chunks[`${playerChunkX + chunkOffset[0]},${playerChunkY + chunkOffset[1]},${playerChunkZ + chunkOffset[2]}`]) {
-          if (!block) {
-            continue;
-          }
-          for (var hitbox of game.items[block.block]({}).hitboxes) {
-            if (hitbox.type == "none") {
-              continue;
-            }
-            for (var playerHitbox of currentUserMetadata.hitboxes) {
-              if (collidesAABB({
-                "x": playerChunkPositionX.add(playerHitbox.x),
-                "y": playerChunkPositionY.add(playerHitbox.y).add(1),
-                "width": new Big(playerHitbox.width),
-                "height": new Big(playerHitbox.height)
-              }, {
-                "x": new Big((chunkOffset[0] * 16) + block.x + hitbox.x),
-                "y": new Big((chunkOffset[1] * 16) + block.y + hitbox.y + 1),
-                "width": new Big(hitbox.width),
-                "height": new Big(hitbox.height)
-              }, false, true) == "bottom") {
-                game.onGround = true;
-                break hitboxsearch;
-              }
-            }
-          }
-        }
-      }
-      // Coyote time to be able jump in the air for a quick time
-      if (game.wasOnGround && !game.onGround) {
-        game.coyoteTime = performance.now();
-      }
-    } else {
-      game.onGround = true;
-    }
-    if (!game.onGround && !game.jumping) {
-      // Not on ground, need to fall
-      hitboxsearch:
-      for (var chunkOffset of [
-        [0, 0, 0],
-        [-1, 0, 0],
-        [1, 0, 0],
-        [0, -1, 0],
-        [-1, -1, 0],
-        [1, -1, 0]
-      ]) {
-        if (!game.chunks[`${playerChunkX + chunkOffset[0]},${playerChunkY + chunkOffset[1]},${playerChunkZ + chunkOffset[2]}`]) {
-          continue;
-        }
-        for (var block of game.chunks[`${playerChunkX + chunkOffset[0]},${playerChunkY + chunkOffset[1]},${playerChunkZ + chunkOffset[2]}`]) {
-          if (!block) {
-            continue;
-          }
-          for (var hitbox of game.items[block.block]({}).hitboxes) {
-            if (hitbox.type == "none") {
-              continue;
-            }
-            for (var playerHitbox of currentUserMetadata.hitboxes) {
-              if (collidesAABB({
-                "x": playerChunkPositionX.add(playerHitbox.x),
-                "y": playerChunkPositionY.add(playerHitbox.y).add(1).sub(4 * game.deltaTime),
-                "width": new Big(playerHitbox.width),
-                "height": new Big(playerHitbox.height)
-              }, {
-                "x": new Big((chunkOffset[0] * 16) + block.x + hitbox.x),
-                "y": new Big((chunkOffset[1] * 16) + block.y + hitbox.y + 1),
-                "width": new Big(hitbox.width),
-                "height": new Big(hitbox.height)
-              })) {
-                foundCollision = { chunkOffset, block, hitbox, playerHitbox };
-                break hitboxsearch;
-              }
-            }
-          }
-        }
-      }
-      if (foundCollision) {
-        currentUserMetadata.y = new Big((playerChunkY * 16) + (foundCollision.chunkOffset[1] * 16) + foundCollision.block.y + foundCollision.hitbox.y + 1);
-      } else {
-        currentUserMetadata.y = currentUserMetadata.y.sub(4 * game.deltaTime);
-      }
-      moved = true;
-      playerChunkY = bigToNumber(bigFloor(currentUserMetadata.y.div(16)));
-      playerChunkPositionY = currentUserMetadata.y.mod(16);
-      if (playerChunkPositionY.lt(0)) {
-        playerChunkPositionY = playerChunkPositionY.add(16);
-      }
-    }
-
-    if (game.chunks[`${playerChunkX},${playerChunkY},${playerChunkZ}`] && game.holdingKeys.get("Space") && (game.onGround || performance.now() - game.coyoteTime <= 50) && !game.jumping && performance.now() - game.lastJump >= 150) {
-      game.jumping = true;
-      game.jumpedMotion = 0;
-    }
-
-    if (game.jumping) {
-      hitboxsearch:
-      for (var chunkOffset of [
-        [0, 0, 0],
-        [-1, 0, 0],
-        [1, 0, 0],
-        [0, 1, 0],
-        [-1, 1, 0],
-        [1, 1, 0]
-      ]) {
-        if (!game.chunks[`${playerChunkX + chunkOffset[0]},${playerChunkY + chunkOffset[1]},${playerChunkZ + chunkOffset[2]}`]) {
-          continue;
-        }
-        for (var block of game.chunks[`${playerChunkX + chunkOffset[0]},${playerChunkY + chunkOffset[1]},${playerChunkZ + chunkOffset[2]}`]) {
-          if (!block) {
-            continue;
-          }
-          for (var hitbox of game.items[block.block]({}).hitboxes) {
-            if (hitbox.type == "none") {
-              continue;
-            }
-            for (var playerHitbox of currentUserMetadata.hitboxes) {
-              if (collidesAABB({
-                "x": playerChunkPositionX.add(playerHitbox.x),
-                "y": playerChunkPositionY.add(playerHitbox.y).add(1).add(7 * game.deltaTime),
-                "width": new Big(playerHitbox.width),
-                "height": new Big(playerHitbox.height)
-              }, {
-                "x": new Big((chunkOffset[0] * 16) + block.x + hitbox.x),
-                "y": new Big((chunkOffset[1] * 16) + block.y + hitbox.y + 1),
-                "width": new Big(hitbox.width),
-                "height": new Big(hitbox.height)
-              })) {
-                foundCollision = { chunkOffset, block, hitbox, playerHitbox };
-                break hitboxsearch;
-              }
-            }
-          }
-        }
-      }
-      if (currentUserMetadata.currentGUI) {
-        game.jumping = false;
-      } else if (foundCollision) {
-        currentUserMetadata.y = new Big((playerChunkY * 16) + (foundCollision.chunkOffset[1] * 16) + foundCollision.block.y - foundCollision.playerHitbox.height);
-        game.jumping = false;
-        game.lastJump = performance.now();
-        moved = true;
-        playerChunkY = bigToNumber(bigFloor(currentUserMetadata.y.div(16)));
-        playerChunkPositionY = currentUserMetadata.y.mod(16);
-        if (playerChunkPositionY.lt(0)) {
-          playerChunkPositionY = playerChunkPositionY.add(16);
-        }
-      } else {
-        currentUserMetadata.y = currentUserMetadata.y.add(7 * game.deltaTime);
-        game.jumpedMotion += 7 * game.deltaTime;
-        if (game.jumpedMotion >= currentUserMetadata.jumpHeight) {
-          game.jumping = false;
-          game.lastJump = performance.now();
-        }
-        moved = true;
-        playerChunkY = bigToNumber(bigFloor(currentUserMetadata.y.div(16)));
-        playerChunkPositionY = currentUserMetadata.y.mod(16);
-        if (playerChunkPositionY.lt(0)) {
-          playerChunkPositionY = playerChunkPositionY.add(16);
-        }
-      }
-    }
-
-    if (game.chunks[`${playerChunkX},${playerChunkY},${playerChunkZ}`] && !currentUserMetadata.currentGUI && game.holdingKeys.get("KeyA")) {
-      var foundCollision = null;
-      hitboxsearch:
-      for (var chunkOffset of [
-        [0, 0, 0],
-        [-1, 0, 0],
-        [0, -1, 0],
-        [0, 1, 0],
-        [-1, -1, 0],
-        [-1, 1, 0]
-      ]) {
-        for (var block of game.chunks[`${playerChunkX + chunkOffset[0]},${playerChunkY + chunkOffset[1]},${playerChunkZ + chunkOffset[2]}`]) {
-          if (!block ) {
-            continue;
-          }
-          for (var hitbox of game.items[block.block]({}).hitboxes) {
-            if (hitbox.type == "none") {
-              continue;
-            }
-            for (var playerHitbox of currentUserMetadata.hitboxes) {
-              if (collidesAABB({
-                "x": playerChunkPositionX.add(playerHitbox.x).sub(playerSpeed),
-                "y": playerChunkPositionY.add(playerHitbox.y).add(1),
-                "width": new Big(playerHitbox.width),
-                "height": new Big(playerHitbox.height)
-              }, {
-                "x": new Big((chunkOffset[0] * 16) + block.x + hitbox.x),
-                "y": new Big((chunkOffset[1] * 16) + block.y + hitbox.y + 1),
-                "width": new Big(hitbox.width),
-                "height": new Big(hitbox.height)
-              })) {
-                foundCollision = { chunkOffset, block, hitbox, playerHitbox };
-                break hitboxsearch;
-              }
-            }
-          }
-        }
-      }
-      if (foundCollision) {
-        currentUserMetadata.x = new Big((playerChunkX * 16) + (foundCollision.chunkOffset[0] * 16) + foundCollision.block.x + foundCollision.hitbox.x + foundCollision.playerHitbox.width + foundCollision.playerHitbox.x);
-        moved = true;
-      } else {
-        currentUserMetadata.x = currentUserMetadata.x.sub(playerSpeed);
-        moved = true;
-      }
-    }
-    if (game.chunks[`${playerChunkX},${playerChunkY},${playerChunkZ}`] && !currentUserMetadata.currentGUI && game.holdingKeys.get("KeyD")) {
-      var foundCollision = null;
-      hitboxsearch:
-      for (var chunkOffset of [
-        [0, 0, 0],
-        [1, 0, 0],
-        [0, -1, 0],
-        [0, 1, 0],
-        [1, -1, 0],
-        [1, 1, 0]
-      ]) {
-        for (var block of game.chunks[`${playerChunkX + chunkOffset[0]},${playerChunkY + chunkOffset[1]},${playerChunkZ + chunkOffset[2]}`]) {
-          if (!block) {
-            continue;
-          }
-          for (var hitbox of game.items[block.block]({}).hitboxes) {
-            if (hitbox.type == "none") {
-              continue;
-            }
-            for (var playerHitbox of currentUserMetadata.hitboxes) {
-              if (collidesAABB({
-                "x": playerChunkPositionX.add(playerHitbox.x).add(playerSpeed),
-                "y": playerChunkPositionY.add(playerHitbox.y).add(1),
-                "width": new Big(playerHitbox.width),
-                "height": new Big(playerHitbox.height)
-              }, {
-                "x": new Big((chunkOffset[0] * 16) + block.x + hitbox.x),
-                "y": new Big((chunkOffset[1] * 16) + block.y + hitbox.y + 1),
-                "width": new Big(hitbox.width),
-                "height": new Big(hitbox.height)
-              })) {
-                foundCollision = { chunkOffset, block, hitbox, playerHitbox };
-                break hitboxsearch;
-              }
-            }
-          }
-        }
-      }
-      if (foundCollision) {
-        currentUserMetadata.x = new Big((playerChunkX * 16) + (foundCollision.chunkOffset[0] * 16) + foundCollision.block.x + foundCollision.hitbox.x - foundCollision.playerHitbox.width - foundCollision.playerHitbox.x);
-        moved = true;
-      } else {
-        currentUserMetadata.x = currentUserMetadata.x.add(playerSpeed);
-        moved = true;
-      }
-    }
-  }
-
-  var direction = "none";
-  if (game.holdingKeys.get("KeyA") && !game.holdingKeys.get("KeyD")) {
-    direction = "left";
-  }
-  if (!game.holdingKeys.get("KeyA") && game.holdingKeys.get("KeyD")) {
-    direction = "right";
-  }
-  if (moved || currentUserMetadata.direction != direction) {
-    currentUserMetadata.direction = direction;
-    sendPacket(PacketType.MOVEMENT, currentUserMetadata.x.toString(), currentUserMetadata.y.toString(), currentUserMetadata.z.toString(), direction);
-  }
+  ShyFog.Client.physics();
 
   // Lock camera on the player
-  var cameraX = (canvas.width / 2) - (currentUserMetadata.x * blockSize) - (blockSize / 2);
-  var cameraY = (canvas.height / 2) - (currentUserMetadata.y * -blockSize) - blockSize;
+  var cameraX = (canvas.width / 2) - (currentUser.x * blockSize) - (blockSize / 2);
+  var cameraY = (canvas.height / 2) - (currentUser.y * -blockSize) - blockSize;
 
   // Render void
-  if (game.worldMetadata.void) {
-    var voidY = (-game.worldMetadata.voidY * blockSize) + cameraY;
+  if (ShyFog.Client.worldMetadata.void) {
+    var voidY = (-ShyFog.Client.worldMetadata.voidY * blockSize) + cameraY;
     if (voidY < 0) {
       voidY = 0;
     }
@@ -501,57 +159,57 @@ function render() {
   }
 
   // Render players
-  for (var username in game.playerMetadata) {
-    if (!hasTexture(`/skin/${username}`)) {
-      saveTexture(`/skin/${username}`, game.playerMetadata[username].skin);
+  for (var username in ShyFog.Client.players) {
+    if (!ShyFog.Client.hasTexture(`/skin/${username}`)) {
+      ShyFog.Client.saveTexture(`/skin/${username}`, ShyFog.Client.players[username].skin);
     }
-    if (game.playerMetadata[username].gamemode == "spectator") {
+    if (ShyFog.Client.players[username].gamemode == "spectator") {
       ctx.save();
       ctx.globalAlpha = 0.5;
-      ctx.drawImage(getTexture(`/skin/${username}`), 8, 8, 8, 8, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.drawImage(getTexture(`/skin/${username}`), 40, 8, 8, 8, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 8, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 40, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
       ctx.restore();
-    } else if (game.playerMetadata[username].direction == "none") {
+    } else if (ShyFog.Client.players[username].direction == "none") {
       ctx.fillStyle = "#000000";
-      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.fillRect(game.playerMetadata[username].x * blockSize + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 2, blockSize / 4 * 3);
-      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4 * 3) + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 2) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(getTexture(`/skin/${username}`), 8, 8, 8, 8, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.drawImage(getTexture(`/skin/${username}`), 40, 8, 8, 8, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.drawImage(getTexture(`/skin/${username}`), 44, 20, 4, 12, game.playerMetadata[username].x * blockSize + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(getTexture(`/skin/${username}`), 20, 20, 8, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 2, blockSize / 4 * 3);
-      ctx.drawImage(getTexture(`/skin/${username}`), 36, 52, 4, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 4 * 3) + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(getTexture(`/skin/${username}`), 4, 20, 4, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(getTexture(`/skin/${username}`), 20, 52, 4, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 2) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
-    } else if (game.playerMetadata[username].direction == "left") {
+      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+      ctx.fillRect(ShyFog.Client.players[username].x * blockSize + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 2, blockSize / 4 * 3);
+      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4 * 3) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 2) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 8, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 40, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 44, 20, 4, 12, ShyFog.Client.players[username].x * blockSize + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 20, 20, 8, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 2, blockSize / 4 * 3);
+      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 36, 52, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4 * 3) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 4, 20, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 20, 52, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 2) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+    } else if (ShyFog.Client.players[username].direction == "left") {
       ctx.fillStyle = "#000000";
-      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(getTexture(`/skin/${username}`), 16, 8, 8, 8, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.drawImage(getTexture(`/skin/${username}`), 40, 52, 4, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(getTexture(`/skin/${username}`), 24, 52, 4, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
-    } else if (game.playerMetadata[username].direction == "right") {
+      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 16, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 40, 52, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 24, 52, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+    } else if (ShyFog.Client.players[username].direction == "right") {
       ctx.fillStyle = "#000000";
-      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(getTexture(`/skin/${username}`), 0, 8, 8, 8, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.drawImage(getTexture(`/skin/${username}`), 40, 20, 4, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(getTexture(`/skin/${username}`), 0, 20, 4, 12, (game.playerMetadata[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (game.playerMetadata[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 0, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 40, 20, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 0, 20, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
     }
-    if (game.debugModeHitboxes && !game.worldMetadata.reducedDebugInfo) {
+    if (ShyFog.Client.debugModeHitboxes && !ShyFog.Client.worldMetadata.reducedDebugInfo) {
       ctx.strokeStyle = "#ffffff";
-      for (var hitbox of game.playerMetadata[username].hitboxes) {
+      for (var hitbox of ShyFog.Client.players[username].hitboxes) {
         ctx.beginPath();
-        ctx.moveTo(bigToNumber(game.playerMetadata[username].x.add(hitbox.x).mul(blockSize).add(cameraX)), game.playerMetadata[username].y.add(hitbox.y).mul(-blockSize).add(cameraY));
-        ctx.lineTo(bigToNumber(game.playerMetadata[username].x.add(hitbox.x).add(hitbox.width).mul(blockSize).add(cameraX)), game.playerMetadata[username].y.add(hitbox.y).mul(-blockSize).add(cameraY));
-        ctx.lineTo(bigToNumber(game.playerMetadata[username].x.add(hitbox.x).add(hitbox.width).mul(blockSize).add(cameraX)), game.playerMetadata[username].y.add(hitbox.y).mul(-blockSize).add(hitbox.height * blockSize).add(cameraY));
-        ctx.lineTo(bigToNumber(game.playerMetadata[username].x.add(hitbox.x).mul(blockSize).add(cameraX)), game.playerMetadata[username].y.add(hitbox.y).mul(-blockSize).add(hitbox.height * blockSize).add(cameraY));
-        ctx.lineTo(bigToNumber(game.playerMetadata[username].x.add(hitbox.x).mul(blockSize).add(cameraX)), game.playerMetadata[username].y.add(hitbox.y).mul(-blockSize).add(cameraY));
+        ctx.moveTo(ShyFog.Client.bigToNumber(ShyFog.Client.players[username].x.add(hitbox.x).mul(blockSize).add(cameraX)), ShyFog.Client.players[username].y.add(hitbox.y).mul(-blockSize).add(cameraY));
+        ctx.lineTo(ShyFog.Client.bigToNumber(ShyFog.Client.players[username].x.add(hitbox.x).add(hitbox.width).mul(blockSize).add(cameraX)), ShyFog.Client.players[username].y.add(hitbox.y).mul(-blockSize).add(cameraY));
+        ctx.lineTo(ShyFog.Client.bigToNumber(ShyFog.Client.players[username].x.add(hitbox.x).add(hitbox.width).mul(blockSize).add(cameraX)), ShyFog.Client.players[username].y.add(hitbox.y).mul(-blockSize).add(hitbox.height * blockSize).add(cameraY));
+        ctx.lineTo(ShyFog.Client.bigToNumber(ShyFog.Client.players[username].x.add(hitbox.x).mul(blockSize).add(cameraX)), ShyFog.Client.players[username].y.add(hitbox.y).mul(-blockSize).add(hitbox.height * blockSize).add(cameraY));
+        ctx.lineTo(ShyFog.Client.bigToNumber(ShyFog.Client.players[username].x.add(hitbox.x).mul(blockSize).add(cameraX)), ShyFog.Client.players[username].y.add(hitbox.y).mul(-blockSize).add(cameraY));
         ctx.stroke();
       }
     }
@@ -561,8 +219,8 @@ function render() {
   for (var chunkZ = playerChunkZ - 1; chunkZ <= playerChunkZ; chunkZ++) {
     for (var chunkX = playerChunkX - renderDistance; chunkX <= playerChunkX + renderDistance; chunkX++) {
       for (var chunkY = playerChunkY - renderDistance; chunkY <= playerChunkY + renderDistance; chunkY++) {
-        if (!game.chunks[`${chunkX},${chunkY},${chunkZ}`]) {
-          if (game.debugModeChunks && Math.floor(currentUserMetadata.z / 16) == chunkZ) {
+        if (!ShyFog.Client.chunks[`${chunkX},${chunkY},${chunkZ}`]) {
+          if (ShyFog.Client.debugModeChunks && Math.floor(currentUser.z / 16) == chunkZ) {
             ctx.fillStyle = "#ff0000";
             ctx.textAlign = "start";
             ctx.font = "15px sans-serif";
@@ -574,22 +232,22 @@ function render() {
           ctx.save();
           ctx.globalAlpha = 0.1;
         }
-        for (var block of game.chunks[`${chunkX},${chunkY},${chunkZ}`]) {
+        for (var block of ShyFog.Client.chunks[`${chunkX},${chunkY},${chunkZ}`]) {
           if (!block) {
             continue;
           }
           var chunkBiome = null;
-          for (var biomeRange of game.biomes[`${chunkX},${chunkY},${chunkZ}`]) {
+          for (var biomeRange of ShyFog.Client.biomes[`${chunkX},${chunkY},${chunkZ}`]) {
             var [ start, end, type ] = biomeRange;
             if (block.x >= start && block.x <= end) {
               chunkBiome = type;
               break;
             }
           }
-          if (!game.items[block.block]) {
-            throw `Unknown block "${block.block}".`;
+          if (!ShyFog.Client.items[block.block]) {
+            return ShyFog.Client.log("FATAL", `Unknown block "${block.block}"`);
           }
-          var blockData = game.items[block.block]({
+          var blockData = ShyFog.Client.items[block.block]({
             "biome": chunkBiome
           });
           // Optimization: Don't render blocks that aren't visible
@@ -599,14 +257,14 @@ function render() {
           // Draw multiple times to fix aliasing (?)
           for (var i = 0; i < antiAliasing; i++) {
             for (var texture of blockData.texture) {
-              ctx.drawImage(getTexture(texture.file), (((chunkX * 16) + block.x + texture.x) * blockSize) + cameraX, (((chunkY * -16) - block.y - texture.y) * blockSize) + cameraY, texture.width * blockSize, texture.height * blockSize);
+              ctx.drawImage(ShyFog.Client.getTexture(texture.file), (((chunkX * 16) + block.x + texture.x) * blockSize) + cameraX, (((chunkY * -16) - block.y - texture.y) * blockSize) + cameraY, texture.width * blockSize, texture.height * blockSize);
             }
           }
         }
         if (chunkZ < playerChunkZ) {
           ctx.restore();
         }
-        if (game.debugModeChunks && chunkZ == playerChunkZ) {
+        if (ShyFog.Client.debugModeChunks && chunkZ == playerChunkZ) {
           ctx.strokeStyle = "#960000";
           ctx.beginPath();
           ctx.moveTo((chunkX * 16 * blockSize) + cameraX, (((chunkY * -16) + 1) * blockSize) + cameraY);
@@ -621,22 +279,22 @@ function render() {
   }
 
   // Render player nametags
-  for (var username in game.playerMetadata) {
-    if ((game.settings.showOwnNametag == "ON" || username != game.currentUser.username) && game.playerMetadata[username].gamemode != "spectator") {
+  for (var username in ShyFog.Client.players) {
+    if ((showOwnNametag == "ON" || username != ShyFog.Client.user.username) && ShyFog.Client.players[username].gamemode != "spectator") {
       ctx.textAlign = "center";
       ctx.font = `${blockSize * 0.3125}px Minecraft`;
       ctx.fillStyle = "#000000";
       ctx.save();
       ctx.globalAlpha = 0.5;
-      ctx.fillRect((game.playerMetadata[username].x * blockSize) + (blockSize / 2) + cameraX - (ctx.measureText(username).width / 2) - 4, (game.playerMetadata[username].y * -blockSize) - blockSize - (blockSize / 4) + cameraY - 12, ctx.measureText(username).width + 8, 15);
+      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 2) + cameraX - (ctx.measureText(username).width / 2) - 4, (ShyFog.Client.players[username].y * -blockSize) - blockSize - (blockSize / 4) + cameraY - 12, ctx.measureText(username).width + 8, 15);
       ctx.restore();
       ctx.fillStyle = "#ffffff";
-      ctx.fillText(username, (game.playerMetadata[username].x * blockSize) + (blockSize / 2) + cameraX, (game.playerMetadata[username].y * -blockSize) - blockSize - (blockSize / 4) + cameraY);
+      ctx.fillText(username, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 2) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize - (blockSize / 4) + cameraY);
     }
   }
 
   // Vignette effect
-  if (game.settings.vignette == "ON") {
+  if (vignette == "ON") {
     var g = ctx.createLinearGradient(0, 0, 0, canvas.height);
     g.addColorStop(0, "rgba(0,0,0,0)");
     g.addColorStop(0.72, "rgba(0,0,0,0)");
@@ -653,8 +311,8 @@ function render() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  var blockCursorX = (game.cursorX - cameraX) / blockSize;
-  var blockCursorY = -((game.cursorY - cameraY) / blockSize) + 1;
+  var blockCursorX = (ShyFog.Client.cursorX - cameraX) / blockSize;
+  var blockCursorY = -((ShyFog.Client.cursorY - cameraY) / blockSize) + 1;
   var blockCursorChunkX = Math.floor(blockCursorX / 16);
   var blockCursorChunkY = Math.floor(blockCursorY / 16);
   var blockCursorRelativeX = Math.floor(blockCursorX) % 16;
@@ -665,11 +323,11 @@ function render() {
   if (blockCursorRelativeY < 0) {
     blockCursorRelativeY += 16;
   }
-  if (game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`] && (currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "creative")) {
-    var blockId = game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`].findIndex(block => block && block.x == blockCursorRelativeX && block.y == blockCursorRelativeY);
+  if (ShyFog.Client.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUser.z.toString()}`] && (currentUser.gamemode == "survival" || currentUser.gamemode == "creative")) {
+    var blockId = ShyFog.Client.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUser.z.toString()}`].findIndex(block => block && block.x == blockCursorRelativeX && block.y == blockCursorRelativeY);
     // Using Pythogorean theorem to check if the block is in player's range
-    if (blockId > -1 && (currentUserMetadata.maximumRange == "Infinity" || currentUserMetadata.x.add(new Big("0.5")).sub(new Big(blockCursorX)).pow(2).add(currentUserMetadata.y.add(new Big("1")).sub(new Big(blockCursorY)).pow(2)).sqrt().lte(new Big(currentUserMetadata.maximumRange)))) {
-      var block = game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`][blockId];
+    if (blockId > -1 && (currentUser.maximumRange == "Infinity" || currentUser.x.add(new Big("0.5")).sub(new Big(blockCursorX)).pow(2).add(currentUser.y.add(new Big("1")).sub(new Big(blockCursorY)).pow(2)).sqrt().lte(new Big(currentUser.maximumRange)))) {
+      var block = ShyFog.Client.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUser.z.toString()}`][blockId];
 
       // Block border at cursor
       ctx.strokeStyle = "#000000";
@@ -677,28 +335,28 @@ function render() {
       for (var i = 0; i < 2; i++) {
         ctx.strokeRect((Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
       }
-      if (game.breakingBlock && !currentUserMetadata.currentGUI && performance.now() - game.lastBlockAction >= 300) {
-        if (currentUserMetadata.gamemode == "creative") {
-          game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`][blockId] = null;
-          sendPacket(PacketType.BLOCK_BREAK, blockCursorX, blockCursorY, bigToNumber(currentUserMetadata.z));
+      if (ShyFog.Client.breakingBlock && !currentUser.currentGUI && performance.now() - ShyFog.Client.lastBlockAction >= 300) {
+        if (currentUser.gamemode == "creative") {
+          ShyFog.Client.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUser.z.toString()}`][blockId] = null;
+          ShyFog.Client.sendPacket(ShyFog.Client.PacketType.BLOCK_BREAK, blockCursorX, blockCursorY, ShyFog.Client.bigToNumber(currentUser.z));
         } else {
           var now = performance.now();
-          if (game.breakingBlockCache.x != Math.floor(blockCursorX) || game.breakingBlockCache.y != Math.floor(blockCursorY) || game.breakingBlockCache.z != bigToNumber(currentUserMetadata.z)) {
-            game.breakingBlockCache = {
+          if (ShyFog.Client.breakingBlockCache.x != Math.floor(blockCursorX) || ShyFog.Client.breakingBlockCache.y != Math.floor(blockCursorY) || ShyFog.Client.breakingBlockCache.z != ShyFog.Client.bigToNumber(currentUser.z)) {
+            ShyFog.Client.breakingBlockCache = {
               "x": Math.floor(blockCursorX),
               "y": Math.floor(blockCursorY),
-              "z": bigToNumber(currentUserMetadata.z)
+              "z": ShyFog.Client.bigToNumber(currentUser.z)
             };
-            game.breakingBlockTicks = 0;
-          } else if (now - game.lastTick >= 50) {
-            game.lastTick = now - ((now - game.lastTick) % 50);
-            game.breakingBlockTicks++;
+            ShyFog.Client.breakingBlockTicks = 0;
+          } else if (now - ShyFog.Client.lastTick >= 50) {
+            ShyFog.Client.lastTick = now - ((now - ShyFog.Client.lastTick) % 50);
+            ShyFog.Client.breakingBlockTicks++;
           }
-          var currentItem = currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`];
+          var currentItem = currentUser.slots[`hotbar.${currentUser.selectedHotbarSlot}`];
           if (currentItem) {
-            currentItem = game.items[currentItem.item]({});
+            currentItem = ShyFog.Client.items[currentItem.item]({});
           }
-          var breakingBlockType = game.items[block.block]({});
+          var breakingBlockType = ShyFog.Client.items[block.block]({});
           var requiredTicks = breakingBlockType.hardness;
           if (breakingBlockType.minMiningLevel < 1 || (currentItem && (!breakingBlockType.correctTool || currentItem.tags.includes(breakingBlockType.correctTool)) && currentItem.miningLevel >= breakingBlockType.minMiningLevel)) {
             requiredTicks *= 30;
@@ -709,27 +367,27 @@ function render() {
           if (breakingBlockType.hardness == -1) {
             ctx.drawImage(getTexture("/block/destroy_stage_0.png"), (Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
           } else {
-            if (game.breakingBlockTicks >= requiredTicks) {
-              game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUserMetadata.z.toString()}`][blockId] = null;
-              sendPacket(PacketType.BLOCK_BREAK, blockCursorX, blockCursorY, bigToNumber(currentUserMetadata.z));
-              game.lastBlockAction = performance.now();
+            if (ShyFog.Client.breakingBlockTicks >= requiredTicks) {
+              ShyFog.Client.chunks[`${blockCursorChunkX},${blockCursorChunkY},${currentUser.z.toString()}`][blockId] = null;
+              ShyFog.Client.sendPacket(ShyFog.Client.PacketType.BLOCK_BREAK, blockCursorX, blockCursorY, ShyFog.Client.bigToNumber(currentUser.z));
+              ShyFog.Client.lastBlockAction = performance.now();
             }
             if (requiredTicks) {
-              ctx.drawImage(getTexture(`/block/destroy_stage_${Math.round(Math.min(game.breakingBlockTicks, requiredTicks) / requiredTicks * 9)}.png`), (Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
+              ctx.drawImage(ShyFog.Client.getTexture(`/block/destroy_stage_${Math.round(Math.min(ShyFog.Client.breakingBlockTicks, requiredTicks) / requiredTicks * 9)}.png`), (Math.floor(blockCursorX) * blockSize) + cameraX, -(Math.floor(blockCursorY) * blockSize) + cameraY, blockSize, blockSize);
             }
           }
         }
       }
     }
-    if (game.placingBlock && !currentUserMetadata.currentGUI && performance.now() - game.lastBlockAction >= 300 && (currentUserMetadata.maximumRange == "Infinity" || currentUserMetadata.x.add(new Big("0.5")).sub(new Big(blockCursorX)).pow(2).add(currentUserMetadata.y.add(new Big("1")).sub(new Big(blockCursorY)).pow(2)).sqrt().lte(new Big(currentUserMetadata.maximumRange)))) {
+    if (ShyFog.Client.placingBlock && !currentUser.currentGUI && performance.now() - ShyFog.Client.lastBlockAction >= 300 && (currentUser.maximumRange == "Infinity" || currentUser.x.add(new Big("0.5")).sub(new Big(blockCursorX)).pow(2).add(currentUser.y.add(new Big("1")).sub(new Big(blockCursorY)).pow(2)).sqrt().lte(new Big(currentUser.maximumRange)))) {
       if (blockId == -1) {
-        if ((currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "creative") && (game.worldMetadata.allowBuildingInVoid || (blockCursorChunkY * 16) + blockCursorRelativeY > game.worldMetadata.voidY) && (game.worldMetadata.worldHeight === null || (blockCursorChunkY * 16) + blockCursorRelativeY <= game.worldMetadata.worldHeight) && currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`] && game.items[currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item]({}).placeable) {
+        if ((currentUser.gamemode == "survival" || currentUser.gamemode == "creative") && (ShyFog.Client.worldMetadata.allowBuildingInVoid || (blockCursorChunkY * 16) + blockCursorRelativeY > ShyFog.Client.worldMetadata.voidY) && (ShyFog.Client.worldMetadata.worldHeight === null || (blockCursorChunkY * 16) + blockCursorRelativeY <= ShyFog.Client.worldMetadata.worldHeight) && currentUser.slots[`hotbar.${currentUser.selectedHotbarSlot}`] && ShyFog.Client.items[currentUser.slots[`hotbar.${currentUser.selectedHotbarSlot}`].item]({}).placeable) {
           var allowed = true;
-          for (var username in game.playerMetadata) {
-            for (var playerHitbox of game.playerMetadata[username].hitboxes) {
-              if (collidesAABB({
-                "x": game.playerMetadata[username].x.add(playerHitbox.x),
-                "y": game.playerMetadata[username].y.add(playerHitbox.y),
+          for (var username in ShyFog.Client.players) {
+            for (var playerHitbox of ShyFog.Client.players[username].hitboxes) {
+              if (ShyFog.Client.collidesAABB({
+                "x": ShyFog.Client.players[username].x.add(playerHitbox.x),
+                "y": ShyFog.Client.players[username].y.add(playerHitbox.y),
                 "width": new Big(playerHitbox.width),
                 "height": new Big(playerHitbox.height)
               }, {
@@ -744,49 +402,49 @@ function render() {
             }
           }
           if (allowed) {
-            game.chunks[`${blockCursorChunkX},${blockCursorChunkY},${bigToNumber(currentUserMetadata.z)}`].push({
-              "block": currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].item,
+            ShyFog.Client.chunks[`${blockCursorChunkX},${blockCursorChunkY},${ShyFog.Client.bigToNumber(currentUser.z)}`].push({
+              "block": currentUser.slots[`hotbar.${currentUser.selectedHotbarSlot}`].item,
               "x": blockCursorRelativeX,
               "y": blockCursorRelativeY
             });
-            if (currentUserMetadata.gamemode != "creative") {
-              if (--currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`].count < 1) {
-                currentUserMetadata.slots[`hotbar.${currentUserMetadata.selectedHotbarSlot}`] = null;
+            if (currentUser.gamemode != "creative") {
+              if (--currentUser.slots[`hotbar.${currentUser.selectedHotbarSlot}`].count < 1) {
+                currentUser.slots[`hotbar.${currentUser.selectedHotbarSlot}`] = null;
               }
             }
-            sendPacket(PacketType.USE, blockCursorX, blockCursorY, bigToNumber(currentUserMetadata.z));
-            game.lastBlockAction = performance.now();
+            ShyFog.Client.sendPacket(ShyFog.Client.PacketType.USE, blockCursorX, blockCursorY, ShyFog.Client.bigToNumber(currentUser.z));
+            ShyFog.Client.lastBlockAction = performance.now();
           }
         }
       } else {
-        sendPacket(PacketType.USE, blockCursorX, blockCursorY, bigToNumber(currentUserMetadata.z));
+        ShyFog.Client.sendPacket(ShyFog.Client.PacketType.USE, blockCursorX, blockCursorY, ShyFog.Client.bigToNumber(currentUser.z));
       }
     }
   }
 
   // HUD
-  if (!game.hideOverlays && currentUserMetadata.gamemode != "spectator") {
-    var heartContainerTexture = getTexture("/gui/sprites/hud/heart/container.png");
-    var halfHeartTexture = getTexture("/gui/sprites/hud/heart/half.png");
-    var fullHeartTexture = getTexture("/gui/sprites/hud/heart/full.png");
-    var emptyFoodTexture = getTexture("/gui/sprites/hud/food_empty.png");
-    var halfFoodTexture = getTexture("/gui/sprites/hud/food_half.png");
-    var fullFoodTexture = getTexture("/gui/sprites/hud/food_full.png");
-    var experienceBarTexture = getTexture("/gui/sprites/hud/experience_bar_background.png");
-    var hotbarTexture = getTexture("/gui/sprites/hud/hotbar.png");
-    var hotbarSelectionTexture = getTexture("/gui/sprites/hud/hotbar_selection.png");
+  if (!ShyFog.Client.hideOverlays && currentUser.gamemode != "spectator") {
+    var heartContainerTexture = ShyFog.Client.getTexture("/gui/sprites/hud/heart/container.png");
+    var halfHeartTexture = ShyFog.Client.getTexture("/gui/sprites/hud/heart/half.png");
+    var fullHeartTexture = ShyFog.Client.getTexture("/gui/sprites/hud/heart/full.png");
+    var emptyFoodTexture = ShyFog.Client.getTexture("/gui/sprites/hud/food_empty.png");
+    var halfFoodTexture = ShyFog.Client.getTexture("/gui/sprites/hud/food_half.png");
+    var fullFoodTexture = ShyFog.Client.getTexture("/gui/sprites/hud/food_full.png");
+    var experienceBarTexture = ShyFog.Client.getTexture("/gui/sprites/hud/experience_bar_background.png");
+    var hotbarTexture = ShyFog.Client.getTexture("/gui/sprites/hud/hotbar.png");
+    var hotbarSelectionTexture = ShyFog.Client.getTexture("/gui/sprites/hud/hotbar_selection.png");
 
-    if (currentUserMetadata.gamemode == "survival" || currentUserMetadata.gamemode == "adventure") {
+    if (currentUser.gamemode == "survival" || currentUser.gamemode == "adventure") {
       // Health
-      for (var i = 0; i < currentUserMetadata.maxHealth; i += 2) {
+      for (var i = 0; i < currentUser.maxHealth; i += 2) {
         var x = i % 20;
         var y = Math.floor(i / 20);
         ctx.drawImage(heartContainerTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (x / 2 * heartContainerTexture.width * guiScale) - (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (heartContainerTexture.height * guiScale) - (y * heartContainerTexture.height * guiScale), heartContainerTexture.width * guiScale, heartContainerTexture.height * guiScale);
       }
-      for (var i = 0; i < Math.min(currentUserMetadata.health, currentUserMetadata.maxHealth); i += 2) {
+      for (var i = 0; i < Math.min(currentUser.health, currentUser.maxHealth); i += 2) {
         var x = i % 20;
         var y = Math.floor(i / 20);
-        if (currentUserMetadata.health % 2 && i == currentUserMetadata.health - 1) {
+        if (currentUser.health % 2 && i == currentUser.health - 1) {
           ctx.drawImage(halfHeartTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (x / 2 * halfHeartTexture.width * guiScale) - (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (halfHeartTexture.height * guiScale) - (y * halfHeartTexture.height * guiScale), halfHeartTexture.width * guiScale, halfHeartTexture.height * guiScale);
         } else {
           ctx.drawImage(fullHeartTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (x / 2 * fullHeartTexture.width * guiScale) - (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (fullHeartTexture.height * guiScale) - (y * fullHeartTexture.height * guiScale), fullHeartTexture.width * guiScale, fullHeartTexture.height * guiScale);
@@ -794,15 +452,15 @@ function render() {
       }
 
       // Hunger
-      for (var i = 0; i < currentUserMetadata.maxFood; i += 2) {
+      for (var i = 0; i < currentUser.maxFood; i += 2) {
         var x = i % 20;
         var y = Math.floor(i / 20);
         ctx.drawImage(emptyFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - (((x / 2) + 1) * emptyFoodTexture.width * guiScale) + (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (emptyFoodTexture.height * guiScale) - (y * emptyFoodTexture.height * guiScale), emptyFoodTexture.width * guiScale, emptyFoodTexture.height * guiScale);
       }
-      for (var i = 0; i < Math.min(currentUserMetadata.food, currentUserMetadata.maxFood); i += 2) {
+      for (var i = 0; i < Math.min(currentUser.food, currentUser.maxFood); i += 2) {
         var x = i % 20;
         var y = Math.floor(i / 20);
-        if (currentUserMetadata.food % 2 && i == currentUserMetadata.food - 1) {
+        if (currentUser.food % 2 && i == currentUser.food - 1) {
           ctx.drawImage(halfFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - (((x / 2) + 1) * halfFoodTexture.width * guiScale) + (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (halfFoodTexture.height * guiScale) - (y * halfFoodTexture.height * guiScale), halfFoodTexture.width * guiScale, halfFoodTexture.height * guiScale);
         } else {
           ctx.drawImage(fullFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - (((x / 2) + 1) * fullFoodTexture.width * guiScale) + (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (fullFoodTexture.height * guiScale) - (y * fullFoodTexture.height * guiScale), fullFoodTexture.width * guiScale, fullFoodTexture.height * guiScale);
@@ -816,10 +474,10 @@ function render() {
     // Hotbar
     ctx.drawImage(hotbarTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2), canvas.height - (hotbarTexture.height * guiScale), hotbarTexture.width * guiScale, hotbarTexture.height * guiScale);
     for (var hotbarIndex = 0; hotbarIndex < 9; hotbarIndex++) {
-      var hotbarItem = currentUserMetadata.slots[`hotbar.${hotbarIndex}`];
+      var hotbarItem = currentUser.slots[`hotbar.${hotbarIndex}`];
       if (hotbarItem) {
-        var texture = game.items[hotbarItem.item]({ biome }).texture[0];
-        ctx.drawImage(getTexture(texture.file), (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (20 * guiScale * hotbarIndex) + (6 * guiScale), canvas.height - (hotbarTexture.height * guiScale) + (6 * guiScale), 10 * guiScale, 10 * guiScale);
+        var texture = ShyFog.Client.items[hotbarItem.item]({ biome }).texture[0];
+        ctx.drawImage(ShyFog.Client.getTexture(texture.file), (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (20 * guiScale * hotbarIndex) + (6 * guiScale), canvas.height - (hotbarTexture.height * guiScale) + (6 * guiScale), 10 * guiScale, 10 * guiScale);
         if (hotbarItem.count > 1) {
           ctx.fillStyle = "#ffffff";
           ctx.textAlign = "end";
@@ -830,11 +488,11 @@ function render() {
     }
 
     // Hotbar selector
-    ctx.drawImage(hotbarSelectionTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (20 * guiScale * currentUserMetadata.selectedHotbarSlot) - guiScale, canvas.height - (hotbarTexture.height * guiScale) - guiScale, hotbarSelectionTexture.width * guiScale, hotbarSelectionTexture.height * guiScale); 
+    ctx.drawImage(hotbarSelectionTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (20 * guiScale * currentUser.selectedHotbarSlot) - guiScale, canvas.height - (hotbarTexture.height * guiScale) - guiScale, hotbarSelectionTexture.width * guiScale, hotbarSelectionTexture.height * guiScale); 
   }
 
   // Chat
-  var chatMessages = game.chatMessages.filter(message => Date.now() - message.time <= 12000);
+  var chatMessages = ShyFog.Client.chatMessages.filter(message => Date.now() - message.time <= 12000);
   const chatScale = 5;
   const chatWidth = 0.3;
   ctx.textAlign = "start";
@@ -850,11 +508,11 @@ function render() {
     ctx.fillText(message.content, 10, canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (heartContainerTexture.height * guiScale) - ((chatScale + 4) * guiScale * (chatMessages.length - messageIndex - 1)));
   }
 
-  if (currentUserMetadata.currentGUI) {
+  if (currentUser.currentGUI) {
     ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    var currentGUIData = game.guis[currentUserMetadata.currentGUI.id];
-    var guiBackground = getTexture(currentGUIData.background);
+    var currentGUIData = ShyFog.Client.guis[currentUser.currentGUI.id];
+    var guiBackground = ShyFog.Client.getTexture(currentGUIData.background);
     var guiBackgroundWidth = (currentGUIData.backgroundWidth || guiBackground.width);
     var guiBackgroundHeight = (currentGUIData.backgroundHeight || guiBackground.height);
     var guiStartX = (canvas.width / 2) - (guiBackgroundWidth * guiScale / 2);
@@ -863,7 +521,7 @@ function render() {
     ctx.drawImage(guiBackground, currentGUIData.backgroundOffsetX || 0, currentGUIData.backgroundOffsetY || 0, guiBackgroundWidth, guiBackgroundHeight, guiStartX, guiStartY, guiBackgroundWidth * guiScale, guiBackgroundHeight * guiScale);
     for (var element of currentGUIData.content) {
       if (element.type == "image") {
-        ctx.drawImage(getTexture(element.file), guiStartX + (element.x * guiScale), guiStartY + (element.y * guiScale), element.width * guiScale, element.height * guiScale);
+        ctx.drawImage(ShyFog.Client.getTexture(element.file), guiStartX + (element.x * guiScale), guiStartY + (element.y * guiScale), element.width * guiScale, element.height * guiScale);
       }
       if (element.type == "current_player") {
         ctx.fillStyle = "#000000";
@@ -874,27 +532,27 @@ function render() {
         ctx.fillRect(guiStartX + (element.x * guiScale) + (element.width * guiScale / 4) + (element.width * guiScale / 2), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
         ctx.fillRect(guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4) + (element.height * guiScale / 8 * 3), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
         ctx.fillRect(guiStartX + (element.x * guiScale) + (element.width * guiScale / 2), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4) + (element.height * guiScale / 8 * 3), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
-        ctx.drawImage(getTexture(`/skin/${game.currentUser.username}`), 8, 8, 8, 8, guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale), element.width * guiScale / 2, element.height * guiScale / 4);
-        ctx.drawImage(getTexture(`/skin/${game.currentUser.username}`), 40, 8, 8, 8, guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale), element.width * guiScale / 2, element.height * guiScale / 4);
-        ctx.drawImage(getTexture(`/skin/${game.currentUser.username}`), 44, 20, 4, 12, guiStartX + (element.x * guiScale), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
-        ctx.drawImage(getTexture(`/skin/${game.currentUser.username}`), 20, 20, 8, 12, guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4), element.width * guiScale / 2, element.height * guiScale / 8 * 3);
-        ctx.drawImage(getTexture(`/skin/${game.currentUser.username}`), 36, 52, 4, 12, guiStartX + (element.x * guiScale) + (element.width * guiScale / 4) + (element.width * guiScale / 2), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
-        ctx.drawImage(getTexture(`/skin/${game.currentUser.username}`), 4, 20, 4, 12, guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4) + (element.height * guiScale / 8 * 3), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
-        ctx.drawImage(getTexture(`/skin/${game.currentUser.username}`), 20, 52, 4, 12, guiStartX + (element.x * guiScale) + (element.width * guiScale / 2), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4) + (element.height * guiScale / 8 * 3), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
+        ctx.drawImage(ShyFog.Client.getTexture(`/skin/${ShyFog.Client.user.username}`), 8, 8, 8, 8, guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale), element.width * guiScale / 2, element.height * guiScale / 4);
+        ctx.drawImage(ShyFog.Client.getTexture(`/skin/${ShyFog.Client.user.username}`), 40, 8, 8, 8, guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale), element.width * guiScale / 2, element.height * guiScale / 4);
+        ctx.drawImage(ShyFog.Client.getTexture(`/skin/${ShyFog.Client.user.username}`), 44, 20, 4, 12, guiStartX + (element.x * guiScale), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
+        ctx.drawImage(ShyFog.Client.getTexture(`/skin/${ShyFog.Client.user.username}`), 20, 20, 8, 12, guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4), element.width * guiScale / 2, element.height * guiScale / 8 * 3);
+        ctx.drawImage(ShyFog.Client.getTexture(`/skin/${ShyFog.Client.user.username}`), 36, 52, 4, 12, guiStartX + (element.x * guiScale) + (element.width * guiScale / 4) + (element.width * guiScale / 2), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
+        ctx.drawImage(ShyFog.Client.getTexture(`/skin/${ShyFog.Client.user.username}`), 4, 20, 4, 12, guiStartX + (element.x * guiScale) + (element.width * guiScale / 4), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4) + (element.height * guiScale / 8 * 3), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
+        ctx.drawImage(ShyFog.Client.getTexture(`/skin/${ShyFog.Client.user.username}`), 20, 52, 4, 12, guiStartX + (element.x * guiScale) + (element.width * guiScale / 2), guiStartY + (element.y * guiScale) + (element.height * guiScale / 4) + (element.height * guiScale / 8 * 3), element.width * guiScale / 4, element.height * guiScale / 8 * 3);
       }
       if (["player_slot", "block_slot", "world_slot"].includes(element.type)) {
-        var hovering = game.cursorX >= guiStartX + (element.x * guiScale) && game.cursorY >= guiStartY + (element.y * guiScale) && game.cursorX <= guiStartX + ((element.x + element.width) * guiScale) && game.cursorY <= guiStartY + ((element.y + element.height) * guiScale);
+        var hovering = ShyFog.Client.cursorX >= guiStartX + (element.x * guiScale) && ShyFog.Client.cursorY >= guiStartY + (element.y * guiScale) && ShyFog.Client.cursorX <= guiStartX + ((element.x + element.width) * guiScale) && ShyFog.Client.cursorY <= guiStartY + ((element.y + element.height) * guiScale);
         if (hovering) {
           ctx.fillStyle = "rgba(255, 255, 255, 0.46)";
           ctx.fillRect(guiStartX + ((element.x + 1) * guiScale), guiStartY + ((element.y + 1) * guiScale), (element.width - 2) * guiScale, (element.height - 2) * guiScale);
         }
         var slotItem = null;
         if (element.type == "player_slot") {
-          slotItem = currentUserMetadata.slots[element.slot];
+          slotItem = currentUser.slots[element.slot];
         }
         if (slotItem) {
-          var texture = game.items[slotItem.item]({ biome }).texture[0];
-          ctx.drawImage(getTexture(texture.file), guiStartX + ((element.x + 1) * guiScale) + (element.width * guiScale * 0.1), guiStartY + ((element.y + 1) * guiScale) + (element.height * guiScale * 0.1), element.width * guiScale * 0.7, element.height * guiScale * 0.7);
+          var texture = ShyFog.Client.items[slotItem.item]({ biome }).texture[0];
+          ctx.drawImage(ShyFog.Client.getTexture(texture.file), guiStartX + ((element.x + 1) * guiScale) + (element.width * guiScale * 0.1), guiStartY + ((element.y + 1) * guiScale) + (element.height * guiScale * 0.1), element.width * guiScale * 0.7, element.height * guiScale * 0.7);
           if (slotItem.count != 1) {
             if (slotItem.count > 0) {
               ctx.fillStyle = "#ffffff";
@@ -911,12 +569,12 @@ function render() {
         }
       }
     }
-    if (hoveringItem && !currentUserMetadata.currentGUI.cursorItem) {
+    if (hoveringItem && !currentUser.currentGUI.cursorItem) {
       ctx.textAlign = "start";
       ctx.font = `${8 * guiScale}px Minecraft`;
-      var itemName = game.items[hoveringItem.item]({ biome }).name;
-      var tooltipX = game.cursorX + (8 * guiScale);
-      var tooltipY = game.cursorY - (16 * guiScale);
+      var itemName = ShyFog.Client.items[hoveringItem.item]({ biome }).name;
+      var tooltipX = ShyFog.Client.cursorX + (8 * guiScale);
+      var tooltipY = ShyFog.Client.cursorY - (16 * guiScale);
       var tooltipWidth = ctx.measureText(itemName).width + (5 * guiScale);
       ctx.fillStyle = "rgba(16, 0, 16, 0.94)";
       ctx.fillRect(tooltipX + (1 * guiScale), tooltipY, tooltipWidth, 16 * guiScale);
@@ -935,55 +593,55 @@ function render() {
       ctx.fillStyle = "#ffffff";
       ctx.fillText(itemName, tooltipX + (4 * guiScale), tooltipY + (11 * guiScale));
     }
-    if (currentUserMetadata.currentGUI.cursorItem) {
-      var cursorItem = game.items[currentUserMetadata.currentGUI.cursorItem.item]({ biome });
+    if (currentUser.currentGUI.cursorItem) {
+      var cursorItem = ShyFog.Client.items[currentUser.currentGUI.cursorItem.item]({ biome });
       var cursorItemSize = guiScale * 18 * 0.7;
-      ctx.drawImage(getTexture(cursorItem.texture[0].file), game.cursorX - (cursorItemSize / 2), game.cursorY - (cursorItemSize / 2), cursorItemSize, cursorItemSize);
-      if (currentUserMetadata.currentGUI.cursorItem.count != 1) {
-        if (currentUserMetadata.currentGUI.cursorItem.count > 0) {
+      ctx.drawImage(ShyFog.Client.getTexture(cursorItem.texture[0].file), ShyFog.Client.cursorX - (cursorItemSize / 2), ShyFog.Client.cursorY - (cursorItemSize / 2), cursorItemSize, cursorItemSize);
+      if (currentUser.currentGUI.cursorItem.count != 1) {
+        if (currentUser.currentGUI.cursorItem.count > 0) {
           ctx.fillStyle = "#ffffff";
         } else {
           ctx.fillStyle = "#ff0000";
         }
         ctx.textAlign = "end";
         ctx.font = `${8 * guiScale}px Minecraft`;
-        ctx.fillText(currentUserMetadata.currentGUI.cursorItem.count.toString(), game.cursorX + (cursorItemSize / 2) + (2 * guiScale), game.cursorY + (cursorItemSize / 2));
+        ctx.fillText(currentUser.currentGUI.cursorItem.count.toString(), ShyFog.Client.cursorX + (cursorItemSize / 2) + (2 * guiScale), ShyFog.Client.cursorY + (cursorItemSize / 2));
       }
     }
   }
 
-  if (!game.hideOverlays && game.debugMode) {
+  if (!ShyFog.Client.hideOverlays && ShyFog.Client.debugMode) {
     ctx.fillStyle = "#ff0000";
     ctx.textAlign = "start";
     ctx.font = "15px sans-serif";
     var debugInfo =  [
-      `ShyFog ${game.version}`,
-      `Server Software: ${game.serverSoftware} ${game.serverVersion}`,
-      `FPS: ${game.times.length}`,
-      `Ping: ${game.measuredPing}ms`,
-      `Current Player: ${game.currentUser.username}${game.currentUser.id ? ` (${game.currentUser.id})` : ""}`,
-      `Position: (${currentUserMetadata.x}, ${currentUserMetadata.y}, ${currentUserMetadata.z})`,
+      `ShyFog ${ShyFog.Client.version}`,
+      `Server Software: ${ShyFog.Client.serverSoftware} ${ShyFog.Client.serverVersion}`,
+      `FPS: ${ShyFog.Client.times.length}`,
+      `Ping: ${ShyFog.Client.measuredPing}ms`,
+      `Current Player: ${ShyFog.Client.user.username}${ShyFog.Client.user.id ? ` (${ShyFog.Client.user.id})` : ""}`,
+      `Position: (${currentUser.x}, ${currentUser.y}, ${currentUser.z})`,
       `Chunk: (${playerChunkX}, ${playerChunkY}, ${playerChunkZ})`,
       `Chunk Position: (${playerChunkPositionX}, ${playerChunkPositionY}, 0)`,
       `Camera: (${cameraX}, ${cameraY})`,
-      `Gamemode: ${currentUserMetadata.gamemode}`,
+      `Gamemode: ${currentUser.gamemode}`,
       `Block Size: ${blockSize}`,
-      `Cursor: (${game.cursorX}, ${game.cursorY})`,
-      `Block Cursor (Float): (${blockCursorX}, ${blockCursorY}, ${Math.floor(currentUserMetadata.z)})`,
-      `Block Cursor (Int): (${Math.floor(blockCursorX)}, ${Math.floor(blockCursorY)}, ${Math.floor(currentUserMetadata.z)})`,
+      `Cursor: (${ShyFog.Client.cursorX}, ${ShyFog.Client.cursorY})`,
+      `Block Cursor (Float): (${blockCursorX}, ${blockCursorY}, ${Math.floor(currentUser.z)})`,
+      `Block Cursor (Int): (${Math.floor(blockCursorX)}, ${Math.floor(blockCursorY)}, ${Math.floor(currentUser.z)})`,
       `Biome: ${biome}`
     ];
-    if (game.worldMetadata.reducedDebugInfo) {
+    if (ShyFog.Client.worldMetadata.reducedDebugInfo) {
       debugInfo =  [
-        `ShyFog ${game.version}`,
-        `Server Software: ${game.serverSoftware} ${game.serverVersion}`,
-        `FPS: ${game.times.length}`,
-        `Ping: ${game.measuredPing}ms`,
-        `Current Player: ${game.currentUser.username}${game.currentUser.id ? ` (${game.currentUser.id})` : ""}`,
+        `ShyFog ${ShyFog.Client.version}`,
+        `Server Software: ${ShyFog.Client.serverSoftware} ${ShyFog.Client.serverVersion}`,
+        `FPS: ${ShyFog.Client.times.length}`,
+        `Ping: ${ShyFog.Client.measuredPing}ms`,
+        `Current Player: ${ShyFog.Client.user.username}${ShyFog.Client.user.id ? ` (${ShyFog.Client.user.id})` : ""}`,
         `Chunk Position: (${playerChunkPositionX}, ${playerChunkPositionY}, 0)`,
-        `Gamemode: ${currentUserMetadata.gamemode}`,
+        `Gamemode: ${currentUser.gamemode}`,
         `Block Size: ${blockSize}`,
-        `Cursor: (${game.cursorX}, ${game.cursorY})`
+        `Cursor: (${ShyFog.Client.cursorX}, ${ShyFog.Client.cursorY})`
       ];
     }
     debugInfo.forEach((line, index) => {
@@ -993,61 +651,12 @@ function render() {
 
   window.requestAnimationFrame(() => {
     var now = performance.now();
-    game.deltaTime = (now - game.prevFrame) / 1e3;
-    game.prevFrame = now;
-    while (game.times.length > 0 && game.times[0] <= (now - 1e3)) {
-      game.times.shift();
+    ShyFog.Client.deltaTime = (now - ShyFog.Client.prevFrame) / 1e3;
+    ShyFog.Client.prevFrame = now;
+    while (ShyFog.Client.times.length > 0 && ShyFog.Client.times[0] <= (now - 1e3)) {
+      ShyFog.Client.times.shift();
     }
-    game.times.push(now);
-    render();
+    ShyFog.Client.times.push(now);
+    ShyFog.Client.render();
   });
-}
-
-function handleMousedown(event) {
-  if (game.paused) {
-    return;
-  }
-  if (event.button == 0) {
-    game.breakingBlock = true;
-    game.breakingBlockTicks = 0;
-  }
-  if (event.button == 2) {
-    game.placingBlock = true;
-  }
-
-  var { guiScale } = game.settings;
-  if (guiScale == "Auto") {
-    // Auto-detect GUI scale
-    guiScale = 1;
-    while(256 * (guiScale + 1) <= Math.min(game.canvas.width, game.canvas.height)) {
-      guiScale++;
-    }
-  } else {
-    guiScale = parseFloat(guiScale.slice(1));
-  }
-
-  var currentUserMetadata = game.playerMetadata[game.currentUser.username];
-  if (currentUserMetadata.currentGUI) {
-    var currentGUIData = game.guis[currentUserMetadata.currentGUI.id];
-    var guiBackground = getTexture(currentGUIData.background);
-    var guiBackgroundWidth = (currentGUIData.backgroundWidth || guiBackground.width);
-    var guiBackgroundHeight = (currentGUIData.backgroundHeight || guiBackground.height);
-    var guiStartX = (game.canvas.width / 2) - (guiBackgroundWidth * guiScale / 2);
-    var guiStartY = (game.canvas.height / 2) - (guiBackgroundHeight * guiScale / 2);
-    for (var element of currentGUIData.content) {
-      var hovering = game.cursorX >= guiStartX + (element.x * guiScale) && game.cursorY >= guiStartY + (element.y * guiScale) && game.cursorX <= guiStartX + ((element.x + element.width) * guiScale) && game.cursorY <= guiStartY + ((element.y + element.height) * guiScale);
-      if (["player_slot", "block_slot", "world_slot"].includes(element.type) && hovering) {
-        sendPacket(PacketType.GUI_CLICK, event.button, element.type, element.slot);
-      }
-    }
-  }
-}
-
-function handleMouseup(event) {
-  if (event.button == 0) {
-    game.breakingBlock = false;
-  }
-  if (event.button == 2) {
-    game.placingBlock = false;
-  }
-}
+};

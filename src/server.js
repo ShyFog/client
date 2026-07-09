@@ -1,4 +1,4 @@
-const PacketType = {
+ShyFog.Client.PacketType = {
   "JOIN": 0,
   "REQUIRE_AUTH": 1,
   "WORLD_METADATA": 2,
@@ -16,21 +16,24 @@ const PacketType = {
   "GUI_CLICK": 14,
   "CHAT_MESSAGE": 15
 };
+ShyFog.Client.defaultValues.ws = null;
+ShyFog.Client.defaultValues.serverTransferInProgress = false;
+ShyFog.Client.resetState();
 
-function sendPacket(...packet) {
-  if (!game.ws) {
+ShyFog.Client.sendPacket = (...packet) => {
+  if (!ShyFog.Client.ws) {
     return;
   }
   var uncompressedPacket = JSON.stringify(packet).slice(1, -1);
   var compressedPacket = pako.deflate(uncompressedPacket);
   if (compressedPacket.length < uncompressedPacket.length) {
-    game.ws.send(compressedPacket);
+    ShyFog.Client.ws.send(compressedPacket);
   } else {
-    game.ws.send(uncompressedPacket);
+    ShyFog.Client.ws.send(uncompressedPacket);
   }
-}
+};
 
-async function handleServerPacket(message) {
+ShyFog.Client.handlePacket = async (message) => {
   var msg = null;
   if (message.data instanceof Blob) {
     try {
@@ -42,7 +45,7 @@ async function handleServerPacket(message) {
     }
   } else {
     if (message.data.startsWith("PONG")) {
-      game.measuredPing = (Date.now() - parseInt(message.data.slice(4)));
+      ShyFog.Client.measuredPing = (Date.now() - parseInt(message.data.slice(4)));
     }
     try {
       msg = JSON.parse(`[${message.data}]`);
@@ -54,85 +57,88 @@ async function handleServerPacket(message) {
     return;
   }
   var [ op, ...data ] = msg;
-  if (op == PacketType.REQUIRE_AUTH) {
+  if (op == ShyFog.Client.PacketType.REQUIRE_AUTH) {
     document.querySelector("#main-menu").innerHTML = `
       <font size="4">Encrypting...</font>
     `;
-    if (!game.currentUser.token) {
+    if (!ShyFog.Client.user.token) {
       return sendPacket(PacketType.JOIN, {
-        "version": game.version,
+        "version": ShyFog.Client.version,
         "sessionToken": null
       });
     }
-    var { sessionToken } = await fetch(`${game.authServer}/session/join`, {
+    var { sessionToken } = await fetch(`${ShyFog.Client.authServer}/session/join`, {
       "method": "POST",
       "headers": {
-        "Authorization": game.currentUser.token,
+        "Authorization": ShyFog.Client.user.token,
         "Content-Type": "application/json"
       },
       "body": JSON.stringify({
-        "server": game.remoteAddress
+        "server": ShyFog.Client.remoteAddress
       })
     }).then(res => res.json());
-    sendPacket(PacketType.JOIN, {
-      "version": game.version,
+    ShyFog.Client.sendPacket(ShyFog.Client.PacketType.JOIN, {
+      "version": ShyFog.Client.version,
       "sessionToken": (sessionToken || null)
     });
   }
-  if (op == PacketType.JOIN) {
-    game.serverSoftware = data[0].software;
-    game.serverVersion = data[0].version;
+  if (op == ShyFog.Client.PacketType.JOIN) {
+    ShyFog.Client.log("INFO", "Server approved, starting game");
+    ShyFog.Client.serverSoftware = data[0].software;
+    ShyFog.Client.serverVersion = data[0].version;
     document.body.innerHTML = `
       <canvas id="game" width="${window.innerWidth}px" height="${window.innerHeight}px">Your browser is unsupported for this game.</canvas>
       <div id="main-menu"></div>
     `;
-    pauseMenu();
+    ShyFog.Client.pauseMenu();
     document.querySelector("#main-menu").style.display = "none";
-    game.canvas = document.querySelector("#game");
-    game.context = game.canvas.getContext("2d");
-    game.canvas.addEventListener("mousedown", handleMousedown);
-    game.canvas.addEventListener("mouseup", handleMouseup);
-    window.requestAnimationFrame(render);
+    ShyFog.Client.canvas = document.querySelector("#game");
+    ShyFog.Client.context = ShyFog.Client.canvas.getContext("2d");
+    ShyFog.Client.canvas.addEventListener("mousedown", ShyFog.Client.handleMousedown);
+    ShyFog.Client.canvas.addEventListener("mouseup", ShyFog.Client.handleMouseup);
+    window.requestAnimationFrame(ShyFog.Client.render);
   }
-  if (op == PacketType.WORLD_METADATA) {
-    game.worldMetadata = Object.assign(game.worldMetadata, data[0]);
+  if (op == ShyFog.Client.PacketType.WORLD_METADATA) {
+    ShyFog.Client.worldMetadata = Object.assign(ShyFog.Client.worldMetadata, data[0]);
   }
-  if (op == PacketType.PLAYER_METADATA) {
-    game.playerMetadata[data[0]] = Object.assign(game.playerMetadata[data[0]] || {}, data[1]);
+  if (op == ShyFog.Client.PacketType.PLAYER_METADATA) {
+    ShyFog.Client.players[data[0]] = Object.assign(ShyFog.Client.players[data[0]] || {}, data[1]);
     if (typeof data[1].x === "string" || typeof data[1].y === "string" || typeof data[1].z === "string") {
-      game.playerMetadata[data[0]].x = new Big(game.playerMetadata[data[0]].x);
-      game.playerMetadata[data[0]].y = new Big(game.playerMetadata[data[0]].y);
-      game.playerMetadata[data[0]].z = new Big(game.playerMetadata[data[0]].z);
+      ShyFog.Client.players[data[0]].x = new Big(ShyFog.Client.players[data[0]].x);
+      ShyFog.Client.players[data[0]].y = new Big(ShyFog.Client.players[data[0]].y);
+      ShyFog.Client.players[data[0]].z = new Big(ShyFog.Client.players[data[0]].z);
     }
   }
-  if (op == PacketType.CHUNKS) {
-    game.chunks = Object.assign(game.chunks, data[0]);
-    game.biomes = Object.assign(game.biomes, data[1]);
+  if (op == ShyFog.Client.PacketType.CHUNKS) {
+    ShyFog.Client.chunks = Object.assign(ShyFog.Client.chunks, data[0]);
+    ShyFog.Client.biomes = Object.assign(ShyFog.Client.biomes, data[1]);
   }
-  if (op == PacketType.BLOCK_BREAK) {
-    game.chunks[`${data[0]},${data[1]},${data[2]}`][data[3]] = null;
+  if (op == ShyFog.Client.PacketType.BLOCK_BREAK) {
+    ShyFog.Client.chunks[`${data[0]},${data[1]},${data[2]}`][data[3]] = null;
   }
-  if (op == PacketType.BLOCK_PLACE) {
-    game.chunks[`${data[0]},${data[1]},${data[2]}`].push(data[3]);
+  if (op == ShyFog.Client.PacketType.BLOCK_PLACE) {
+    ShyFog.Client.chunks[`${data[0]},${data[1]},${data[2]}`].push(data[3]);
   }
-  if (op == PacketType.PLAYER_DISCONNECTED) {
-    delete game.playerMetadata[data[0]];
+  if (op == ShyFog.Client.PacketType.PLAYER_DISCONNECTED) {
+    delete ShyFog.Client.players[data[0]];
   }
-  if (op == PacketType.SERVER_TRANSFER) {
-    game.serverTransferInProgress = true;
-    game.ws.close(1000, "Disconnected");
-    connectServer(data[0], data[1]);
+  if (op == ShyFog.Client.PacketType.SERVER_TRANSFER) {
+    ShyFog.Client.log("INFO", `Transferring to ${data[0]}`);
+    ShyFog.Client.serverTransferInProgress = true;
+    ShyFog.Client.ws.close(1000, "Disconnected");
+    ShyFog.Client.connectServer(data[0], data[1]);
   }
-  if (op == PacketType.CHAT_MESSAGE) {
+  if (op == ShyFog.Client.PacketType.CHAT_MESSAGE) {
     data.forEach(chatMessage => {
-      game.chatMessages.push(Object.assign(chatMessage, {
+      ShyFog.Client.log("INFO", `[CHAT] ${chatMessage.content}`);
+      ShyFog.Client.chatMessages.push(Object.assign(chatMessage, {
         "time": Date.now()
       }));
     });
   }
 }
 
-function connectServer(address, forceSSL) {
+ShyFog.Client.connectServer = (address, forceSSL) => {
   try {
     var url = new URL(`ws${(forceSSL || location.protocol == "https:") ? "s" : ""}://${address}`);
   } catch {
@@ -141,7 +147,7 @@ function connectServer(address, forceSSL) {
       <br />
       <div class="button" id="back" style="width: 200px;">Back to Server List</div>
     `;
-    document.querySelector("#back").addEventListener("click", multiplayerMenu);
+    document.querySelector("#back").addEventListener("click", ShyFog.Client.multiplayerMenu);
     return;
   }
   if (url.hostname == "localhost") {
@@ -150,47 +156,49 @@ function connectServer(address, forceSSL) {
   if (!url.port) {
     url.port = 6280;
   }
-  resetState();
-  game.remoteAddress = url.host;
+  ShyFog.Client.log("INFO", `Connecting to ${url.hostname}, ${url.port}`);
+  ShyFog.Client.resetState();
+  ShyFog.Client.remoteAddress = url.host;
   document.querySelector("#main-menu").innerHTML = `
     <font size="4">Connecting to server...</font>
   `;
-  game.ws = new WebSocket(`${url.toString()}api/shyfog/game`);
-  game.ws.addEventListener("open", () => {
+  ShyFog.Client.ws = new WebSocket(`${url.toString()}api/shyfog/game`);
+  ShyFog.Client.ws.addEventListener("open", () => {
     document.querySelector("#main-menu").innerHTML = `
       <font size="4">Logging in...</font>
     `;
-    game.ws.send(`PING${Date.now()}`);
-    sendPacket(PacketType.JOIN, {
-      "version": game.version,
-      "username": game.currentUser.username
+    ShyFog.Client.ws.send(`PING${Date.now()}`);
+    ShyFog.Client.sendPacket(ShyFog.Client.PacketType.JOIN, {
+      "version": ShyFog.Client.version,
+      "username": ShyFog.Client.user.username
     });
   });
-  game.ws.addEventListener("message", handleServerPacket);
-  game.ws.addEventListener("close", event => {
-    if (game.serverTransferInProgress) {
-      game.serverTransferInProgress = false;
+  ShyFog.Client.ws.addEventListener("message", ShyFog.Client.handlePacket);
+  ShyFog.Client.ws.addEventListener("close", event => {
+    if (ShyFog.Client.serverTransferInProgress) {
+      ShyFog.Client.serverTransferInProgress = false;
       return;
     }
-    resetState();
+    ShyFog.Client.resetState();
     document.body.innerHTML = `
       <video id="panorama" src="panorama.mp4" autoplay muted loop playsinline></video>
-      <p id="client-info">ShyFog Client ${game.version}</p>
+      <p id="client-info">ShyFog Client ${ShyFog.Client.version}</p>
       <div id="main-menu"></div>
     `;
     document.querySelector("#main-menu").innerHTML = `
-      <font size="4" style="text-align: center;">${event.reason ? event.reason.split("<").join("&lt;").split(">").join("&gt;").split("\n").join("<br />") : `Disconnected: ${event.code}`}</font>
+      <font size="4" style="text-align: center;">${event.reason ? ShyFog.Client.antiXSS(event.reason).split("\n").join("<br />") : `Disconnected: ${event.code}`}</font>
       <br />
       <div class="button" id="reconnect" style="width: 200px;">Reconnect</div>
       <div class="button" id="back" style="width: 200px;">Back to Server List</div>
     `;
-    document.querySelector("#reconnect").addEventListener("click", () => connectServer(address));
-    document.querySelector("#back").addEventListener("click", multiplayerMenu);
+    document.querySelector("#reconnect").addEventListener("click", () => ShyFog.Client.connectServer(address));
+    document.querySelector("#back").addEventListener("click", ShyFog.Client.multiplayerMenu);
   });
 }
 
+// Send pings every 5 seconds
 setInterval(() => {
-  if (game.ws && game.ws.readyState == WebSocket.OPEN) {
-    game.ws.send(`PING${Date.now()}`);
+  if (ShyFog.Client.ws && ShyFog.Client.ws.readyState == WebSocket.OPEN) {
+    ShyFog.Client.ws.send(`PING${Date.now()}`);
   }
 }, 5000);

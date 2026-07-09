@@ -1,32 +1,33 @@
 // Optimization: Texture caching
+ShyFog.Client.defaultValues.texturesCache = new Map;
+ShyFog.Client.resetState();
 
-game.texturesCache = new Map;
+ShyFog.Client.hasTexture = file => {
+  return ShyFog.Client.texturesCache.has(file);
+};
 
-function hasTexture(file) {
-  return game.texturesCache.has(file);
-}
-
-function getTexture(file) {
-  if (!hasTexture(file)) {
-    game.texturesCache.set(file, new Image);
-    game.texturesCache.get(file).src = `textures${file}`;
+ShyFog.Client.getTexture = file => {
+  if (!ShyFog.Client.hasTexture(file)) {
+    ShyFog.Client.texturesCache.set(file, new Image);
+    ShyFog.Client.texturesCache.get(file).src = `textures${file}`;
   }
-  return game.texturesCache.get(file);
-}
+  return ShyFog.Client.texturesCache.get(file);
+};
 
-function saveTexture(file, source) {
-  game.texturesCache.set(file, new Image);
-  game.texturesCache.get(file).src = source;
-}
+ShyFog.Client.saveTexture = (file, source) => {
+  ShyFog.Client.log("INFO", `Creating dynamic texture ${file}`);
+  ShyFog.Client.texturesCache.set(file, new Image);
+  ShyFog.Client.texturesCache.get(file).src = source;
+};
 
 // Pre-cache destroy stages
-getTexture("/block/destroy_stage_0.png");
-getTexture("/block/destroy_stage_1.png");
-getTexture("/block/destroy_stage_2.png");
-getTexture("/block/destroy_stage_3.png");
-getTexture("/block/destroy_stage_4.png");
-getTexture("/block/destroy_stage_5.png");
-getTexture("/block/destroy_stage_6.png");
-getTexture("/block/destroy_stage_7.png");
-getTexture("/block/destroy_stage_8.png");
-getTexture("/block/destroy_stage_9.png");
+ShyFog.Client.getTexture("/block/destroy_stage_0.png");
+ShyFog.Client.getTexture("/block/destroy_stage_1.png");
+ShyFog.Client.getTexture("/block/destroy_stage_2.png");
+ShyFog.Client.getTexture("/block/destroy_stage_3.png");
+ShyFog.Client.getTexture("/block/destroy_stage_4.png");
+ShyFog.Client.getTexture("/block/destroy_stage_5.png");
+ShyFog.Client.getTexture("/block/destroy_stage_6.png");
+ShyFog.Client.getTexture("/block/destroy_stage_7.png");
+ShyFog.Client.getTexture("/block/destroy_stage_8.png");
+ShyFog.Client.getTexture("/block/destroy_stage_9.png");
