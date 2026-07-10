@@ -1,8 +1,11 @@
 globalThis.ShyFog = (globalThis.ShyFog || {});
+ShyFog.clientOnly = code => ShyFog.Client ? code() : null;
+ShyFog.serverOnly = code => ShyFog.Server ? code() : null;
 ShyFog.Client = {};
 ShyFog.Client.version = "%SHYFOG_VERSION%";
 ShyFog.Client.authServer = "https://shyfog-auth.topcatto8.workers.dev/api";
 ShyFog.Client.captchaSiteKey = "6LePli8tAAAAABxR-Y8ZfzDCQORwxLSXzbMMKHAl";
+ShyFog.Client.mods = [];
 ShyFog.Client.settingsSchema = [{
   "property": "vignette",
   "type": "toggle",
@@ -115,10 +118,19 @@ window.addEventListener("keyup", event => {
 });
 
 // The main entrypoint of the game once page loads
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
   if (!ShyFog.Client.items || !ShyFog.Client.guis || !ShyFog.Client.recipes) {
     ShyFog.Client.log("ERROR", "Unable to find data repository, game will not work!");
   }
+  ShyFog.Client.log("INFO", "Initializing file system...");
+  await ZenFS.configure({
+	  "mounts": {
+		  "/mods": {
+        "backend": ZenFS.IndexedDB,
+        "storeName": "shyfog-mods"
+      }
+	  }
+  });
   ShyFog.Client.log("INFO", "Loading saved data...");
   ShyFog.Client.accounts = [];
   ShyFog.Client.currentAccount = 0;
@@ -156,6 +168,36 @@ window.addEventListener("DOMContentLoaded", () => {
     <p id="client-info">ShyFog Client ${ShyFog.Client.version}</p>
     <div id="main-menu"></div>
   `;
+
+  ShyFog.Client.log("INFO", "Searching /mods for mods");
+  var mods = await new Promise(res => ZenFS.fs.readdir("/mods", (_, data) => res(data)));
+  ShyFog.Client.log("INFO", `ShyFog has identified ${mods.length} mods to load`);
+  for (var modFile of mods) {
+    var data = await new Promise(res => ZenFS.fs.readFile(`/mods/${modFile}`, (_, data) => res(data)));
+    try {
+      var mod = JSON.parse(decodeURIComponent(escape(atob(data))));
+    } catch {
+      ShyFog.Client.log("WARN", `Found a non-mod file ${modFile} in your mods directory. It will now be injected. This could severe stability issues, it should be removed if possible.`);
+      try {
+        eval(data);
+      } catch(err) {
+        console.error(err);
+        ShyFog.Client.log("FATAL", `Mod "${modFile}" just crashed!`);
+        ShyFog.Client.modsMenu(`Mod "${modFile}" is crashing the game.<br />Please delete the mod and reload.`);
+        return;
+      }
+    }
+    ShyFog.Client.mods.push(mod);
+    try {
+      eval(mod.code);
+    } catch(err) {
+      console.error(err);
+      ShyFog.Client.log("FATAL", `Mod "${modFile}" just crashed!`);
+      ShyFog.Client.modsMenu(`Mod "${mod.name}" (${modFile}) is crashing the game.<br />Please delete the mod and reload.`);
+      return;
+    }
+  }
+
   if (!ShyFog.Client.user) {
     ShyFog.Client.log("INFO", "Current user not set, opening login menu");
     return ShyFog.Client.loginMenu();

@@ -97,6 +97,16 @@ a {
   margin: 0;
 }
 
+.error-block {
+  background-color: rgba(255, 0, 0, .7);
+  color: #ffffff;
+  padding: 8px;
+  border-radius: 4px;
+  text-align: center;
+  font-family: Arial;
+  max-width: 290px;
+}
+
 .skin-preview {
   position: relative;
   display: inline-block;
@@ -233,6 +243,7 @@ a {
   padding: 4px;
   background-color: #585858;
   border-radius: 4px;
+  cursor: pointer;
 }
 
 /* Inputs */

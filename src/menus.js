@@ -65,12 +65,14 @@ ShyFog.Client.mainMenu = () => {
     <br />
     <div class="button disabled" id="singleplayer" style="width: 200px;">Singleplayer</div>
     <div class="button" id="multiplayer" style="width: 200px;">Multiplayer</div>
+    <div class="button" id="mods" style="width: 200px;">Mods</div>
     <div class="button" id="settings" style="width: 200px;">Settings</div>
     <br />
     <br />
     <p style="margin: 0;">Logged in as <span class="skin-preview"><span class="skin-preview-layer skin-preview-layer1"></span><span class="skin-preview-layer skin-preview-layer2"></span><span class="skin-preview-layer skin-preview-layer3"></span></span> <a>${ShyFog.Client.antiXSS(ShyFog.Client.user.username)}</a>${ShyFog.Client.user.token ? "" : ` <img src="offline.png" width="20px" height="20px" style="vertical-align: middle; cursor: help; margin-bottom: 3px;" title="Offline" />`} <img src="switch-user.png" width="20px" height="20px" style="vertical-align: middle; cursor: pointer; margin-bottom: 3px;" id="switch-user" title="Switch User" /></p>
   `;
   document.querySelector("#multiplayer").addEventListener("click", ShyFog.Client.multiplayerMenu);
+  document.querySelector("#mods").addEventListener("click", ShyFog.Client.modsMenu);
   document.querySelector("#settings").addEventListener("click", ShyFog.Client.settingsMenu);
   document.querySelector(".skin-preview-layer2").style.backgroundImage = `url("${ShyFog.Client.user.skin}")`;
   document.querySelector(".skin-preview-layer3").style.backgroundImage = `url("${ShyFog.Client.user.skin}")`;
@@ -166,6 +168,81 @@ ShyFog.Client.multiplayerMenu = () => {
   }
   for (var index = 0; index < ShyFog.Client.servers.length; index++) {
     probeServer(index);
+  }
+};
+
+ShyFog.Client.modsMenu = async error => {
+  var mods = await new Promise(res => ZenFS.fs.readdir("/mods", (_, data) => res(data)));
+  document.querySelector("#main-menu").innerHTML = `
+    <font size="6">Mods</font>
+    ${error ? `
+      <br />
+      <div class="error-block">
+        ${error}
+      </div>
+    ` : ""}
+    <br />
+    <div id="server-list">
+      ${mods.map((mod, index) => `
+        <div class="server" id="server-${index}" style="cursor: auto;">
+          <img class="icon" src="textures/misc/unknown_server.png" />
+          <div class="main">
+            <div class="name">${mod}</div>
+            <div class="description"></div>
+          </div>
+          <div class="meta">
+            <br />
+            <br />
+            <div class="actions">
+              <img class="delete" src="delete.png" />
+            </div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+    <br />
+    <div class="button" id="add-mod" style="width: 200px;">Add Mod</div>
+    <div class="button" id="reload" style="width: 200px;">Reload Game</div>
+  `;
+  document.querySelector("#add-mod").addEventListener("click", () => {
+    var input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".sfm";
+    input.onchange = () => {
+      if (input.files[0]) {
+        var fr = new FileReader;
+        fr.onload = () => {
+          if (fr.readyState == 2) {
+            ZenFS.fs.writeFile(`/mods/${input.files[0].name}`, fr.result, () => {
+              ShyFog.Client.modsMenu();
+            });
+          }
+        };
+        fr.readAsText(input.files[0]);
+      }
+    };
+    input.click();
+  });
+  document.querySelector("#reload").addEventListener("click", () => location.reload());
+  async function renderMod(index) {
+    document.querySelector(`#server-${index} .meta .actions .delete`).addEventListener("click", event => {
+      event.stopPropagation();
+      ZenFS.fs.unlink(`/mods/${mods[index]}`, ShyFog.Client.modsMenu);
+    });
+    var data = await new Promise(res => ZenFS.fs.readFile(`/mods/${mods[index]}`, (_, data) => res(data)));
+    try {
+      var mod = JSON.parse(decodeURIComponent(escape(atob(data))));
+    } catch {
+      return;
+    }
+    if (mod.icon) {
+      document.querySelector(`#server-${index} .icon`).src = mod.icon;
+    }
+    document.querySelector(`#server-${index} .name`).innerText = (mod.name || mod.modid || mods[index]);
+    document.querySelector(`#server-${index} .description`).innerText = (mod.description || "");
+  }
+  for (var index = 0; index < mods.length; index++) {
+    renderMod(index);
   }
 };
 
