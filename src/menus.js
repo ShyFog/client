@@ -72,7 +72,7 @@ ShyFog.Client.mainMenu = () => {
     <p style="margin: 0;">Logged in as <span class="skin-preview"><span class="skin-preview-layer skin-preview-layer1"></span><span class="skin-preview-layer skin-preview-layer2"></span><span class="skin-preview-layer skin-preview-layer3"></span></span> <a>${ShyFog.Client.antiXSS(ShyFog.Client.user.username)}</a>${ShyFog.Client.user.token ? "" : ` <img src="offline.png" width="20px" height="20px" style="vertical-align: middle; cursor: help; margin-bottom: 3px;" title="Offline" />`} <img src="switch-user.png" width="20px" height="20px" style="vertical-align: middle; cursor: pointer; margin-bottom: 3px;" id="switch-user" title="Switch User" /></p>
   `;
   document.querySelector("#multiplayer").addEventListener("click", ShyFog.Client.multiplayerMenu);
-  document.querySelector("#mods").addEventListener("click", ShyFog.Client.modsMenu);
+  document.querySelector("#mods").addEventListener("click", () => ShyFog.Client.modsMenu());
   document.querySelector("#settings").addEventListener("click", ShyFog.Client.settingsMenu);
   document.querySelector(".skin-preview-layer2").style.backgroundImage = `url("${ShyFog.Client.user.skin}")`;
   document.querySelector(".skin-preview-layer3").style.backgroundImage = `url("${ShyFog.Client.user.skin}")`;
@@ -227,7 +227,7 @@ ShyFog.Client.modsMenu = async error => {
   async function renderMod(index) {
     document.querySelector(`#server-${index} .meta .actions .delete`).addEventListener("click", event => {
       event.stopPropagation();
-      ZenFS.fs.unlink(`/mods/${mods[index]}`, ShyFog.Client.modsMenu);
+      ZenFS.fs.unlink(`/mods/${mods[index]}`, () => ShyFog.Client.modsMenu());
     });
     var data = await new Promise(res => ZenFS.fs.readFile(`/mods/${mods[index]}`, (_, data) => res(data)));
     try {

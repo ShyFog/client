@@ -169,32 +169,36 @@ window.addEventListener("DOMContentLoaded", async () => {
     <div id="main-menu"></div>
   `;
 
-  ShyFog.Client.log("INFO", "Searching /mods for mods");
-  var mods = await new Promise(res => ZenFS.fs.readdir("/mods", (_, data) => res(data)));
-  ShyFog.Client.log("INFO", `ShyFog has identified ${mods.length} mods to load`);
-  for (var modFile of mods) {
-    var data = await new Promise(res => ZenFS.fs.readFile(`/mods/${modFile}`, (_, data) => res(data)));
-    try {
-      var mod = JSON.parse(decodeURIComponent(escape(atob(data))));
-    } catch {
-      ShyFog.Client.log("WARN", `Found a non-mod file ${modFile} in your mods directory. It will now be injected. This could severe stability issues, it should be removed if possible.`);
+  if (location.search == "?safemode") {
+    ShyFog.Client.log("INFO", "Safe-mode detected, not loading mods");
+  } else {
+    ShyFog.Client.log("INFO", "Searching /mods for mods");
+    var mods = await new Promise(res => ZenFS.fs.readdir("/mods", (_, data) => res(data)));
+    ShyFog.Client.log("INFO", `ShyFog has identified ${mods.length} mods to load`);
+    for (var modFile of mods) {
+      var data = await new Promise(res => ZenFS.fs.readFile(`/mods/${modFile}`, (_, data) => res(data)));
       try {
-        eval(data);
+        var mod = JSON.parse(decodeURIComponent(escape(atob(data))));
+      } catch {
+        ShyFog.Client.log("WARN", `Found a non-mod file ${modFile} in your mods directory. It will now be injected. This could severe stability issues, it should be removed if possible.`);
+        try {
+          eval(data);
+        } catch(err) {
+          console.error(err);
+          ShyFog.Client.log("FATAL", `Mod "${modFile}" just crashed!`);
+          ShyFog.Client.modsMenu(`Mod "${modFile}" is crashing the game.<br />Please delete the mod and reload.`);
+          return;
+        }
+      }
+      ShyFog.Client.mods.push(mod);
+      try {
+        eval(mod.code);
       } catch(err) {
         console.error(err);
         ShyFog.Client.log("FATAL", `Mod "${modFile}" just crashed!`);
-        ShyFog.Client.modsMenu(`Mod "${modFile}" is crashing the game.<br />Please delete the mod and reload.`);
+        ShyFog.Client.modsMenu(`Mod "${mod.name}" (${modFile}) is crashing the game.<br />Please delete the mod and reload.`);
         return;
       }
-    }
-    ShyFog.Client.mods.push(mod);
-    try {
-      eval(mod.code);
-    } catch(err) {
-      console.error(err);
-      ShyFog.Client.log("FATAL", `Mod "${modFile}" just crashed!`);
-      ShyFog.Client.modsMenu(`Mod "${mod.name}" (${modFile}) is crashing the game.<br />Please delete the mod and reload.`);
-      return;
     }
   }
 
