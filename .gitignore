@@ -1,4 +1,4 @@
 node_modules/
 package-lock.json
 public/textures/
-public/shyfog.js
+public/shyfog-client.js

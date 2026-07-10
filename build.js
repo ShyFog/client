@@ -41,5 +41,5 @@ const texturesUrl = "https://github.com/ShyFog/client/releases/download/textures
   }
 
   // Save the result
-  fs.writeFileSync("public/shyfog.js", minified);
+  fs.writeFileSync("public/shyfog-client.js", minified);
 })();
