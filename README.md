@@ -1,8 +1,8 @@
 # Quick local installation/build guide
 
 ```bash
-# Download v0.0.4 client to shyfog-client folder
-git clone --recurse-submodules -b v0.0.4 https://github.com/ShyFog/client.git shyfog-client
+# Download v0.0.5 client to shyfog-client folder
+git clone --recurse-submodules -b v0.0.5 https://github.com/ShyFog/client.git shyfog-client
 
 # Install modules and build the client
 cd shyfog-client
