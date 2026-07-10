@@ -30,8 +30,13 @@ const texturesUrl = "https://github.com/ShyFog/client/releases/download/textures
   // Minify
   var minified = babel.transformSync(bundle, {
     "presets": ["minify"],
-    "comments": false
-  }).code.split("\n").join("\\n");
+    "comments": false,
+    "sourceMaps": (process.env.SHYFOG_DEV == "1") ? "inline" : false,
+    "sourceFileName": "shyfog-client.js"
+  }).code;
+  if (process.env.SHYFOG_DEV != "1") {
+    minified = minified.split("\n").join("\\n");
+  }
 
   for (var file of fs.readdirSync("lib")) {
     if (file.startsWith(".")) {
