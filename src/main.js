@@ -1,6 +1,6 @@
 globalThis.ShyFog = (globalThis.ShyFog || {});
 ShyFog.Client = {};
-ShyFog.Client.version = "v0.0.5";
+ShyFog.Client.version = "%SHYFOG_VERSION%";
 ShyFog.Client.authServer = "https://shyfog-auth.topcatto8.workers.dev/api";
 ShyFog.Client.captchaSiteKey = "6LePli8tAAAAABxR-Y8ZfzDCQORwxLSXzbMMKHAl";
 ShyFog.Client.settingsSchema = [{

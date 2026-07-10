@@ -1,6 +1,7 @@
 var fs = require("fs");
 var babel = require("@babel/core");
 var admZip = require("adm-zip");
+var version = "v" + require("./package.json").version;
 
 const texturesUrl = "https://github.com/ShyFog/client/releases/download/textures/textures.zip";
 
@@ -13,7 +14,7 @@ const texturesUrl = "https://github.com/ShyFog/client/releases/download/textures
   }
 
   // Bundle all files together
-  var bundle = fs.readFileSync("src/main.js").toString("utf-8");
+  var bundle = fs.readFileSync("src/main.js").toString("utf-8").split("%SHYFOG_VERSION%").join(version);
   for (var file of fs.readdirSync("src")) {
     if (file == "main.js" || file.startsWith(".")) {
       continue;
