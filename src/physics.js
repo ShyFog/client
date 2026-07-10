@@ -8,12 +8,12 @@ ShyFog.Client.resetState();
 
 ShyFog.Client.physics = () => {
   var currentUser = ShyFog.Client.players[ShyFog.Client.user.username];
-  var playerSpeed = (5 * ShyFog.Client.deltaTime);
+  var playerSpeed = (currentUser.walkSpeed * ShyFog.Client.deltaTime);
   if (ShyFog.Client.holdingKeys.get("ShiftLeft")) {
-    playerSpeed = (2 * ShyFog.Client.deltaTime);
+    playerSpeed = (currentUser.shiftSpeed * ShyFog.Client.deltaTime);
   }
   if (ShyFog.Client.holdingKeys.get("ControlLeft")) {
-    playerSpeed = (7 * ShyFog.Client.deltaTime);
+    playerSpeed = (currentUser.sprintSpeed * ShyFog.Client.deltaTime);
   }
   var playerChunkX = ShyFog.Client.bigToNumber(ShyFog.Client.bigFloor(currentUser.x.div(16)));
   var playerChunkY = ShyFog.Client.bigToNumber(ShyFog.Client.bigFloor(currentUser.y.div(16)));
@@ -30,7 +30,7 @@ ShyFog.Client.physics = () => {
   var moved = false;
   if (["creative", "spectator"].includes(currentUser.gamemode)) {
     if (ShyFog.Client.holdingKeys.get("Space")) {
-      currentUser.y = currentUser.y.add(3 * ShyFog.Client.deltaTime);
+      currentUser.y = currentUser.y.add(currentUser.verticalFlySpeed * ShyFog.Client.deltaTime);
       moved = true;
     }
     if (ShyFog.Client.holdingKeys.get("KeyA")) {
@@ -42,7 +42,7 @@ ShyFog.Client.physics = () => {
       moved = true;
     }
     if (ShyFog.Client.holdingKeys.get("ShiftLeft")) {
-      currentUser.y = currentUser.y.sub(3 * ShyFog.Client.deltaTime);
+      currentUser.y = currentUser.y.sub(currentUser.verticalFlySpeed * ShyFog.Client.deltaTime);
       moved = true;
     }
   } else {
