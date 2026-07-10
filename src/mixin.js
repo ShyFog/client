@@ -2,11 +2,24 @@ ShyFog.Client.Mixin = class {
   constructor() {
     ShyFog.Client.log("INFO", `Mixin created: ${this.constructor.name}`);
   }
-  inject({ target, at, method }) {
-    ShyFog.Client.log("INFO", `Injecting mixin "${this.constructor.name}" into ${target}@${at}...`);
-    var originalTarget = ShyFog.Client[target];
+  inject(at, method) {
+    ShyFog.Client.log("INFO", `Injecting mixin "${this.constructor.name}" into ${at}...`);
+    if (!at.includes("@")) {
+      return ShyFog.Client.log("ERROR", `Invalid target ${at} to inject`);
+    }
+    var target = at.split("@");
+    at = target.pop();
+    target = target.join("@");
+    var parent = null;
+    var originalTarget = ShyFog.Client;
+    var lastPart = null;
+    for (var part of target.split(".")) {
+      parent = originalTarget;
+      originalTarget = originalTarget[part];
+      lastPart = part;
+    }
     if (typeof originalTarget !== "function") {
-      return ShyFog.Client.log("ERROR", `Invalid target ${target}@${at} to inject`);
+      return ShyFog.Client.log("ERROR", `Invalid target ${at} to inject`);
     }
     function fakeTarget(...args) {
       var result = {};
@@ -18,11 +31,11 @@ ShyFog.Client.Mixin = class {
       }
       var originalResult = originalTarget(...(result.args || args));
       if (at == "TAIL") {
-        result = method(...args, originalResult) || result;
+        result = method(originalResult, ...args) || result;
       }
       return (result.returnValue || originalResult);
     }
-    ShyFog.Client[target] = fakeTarget;
+    parent[lastPart] = fakeTarget;
     ShyFog.Client.log("INFO", "Injection success");
   }
 };
