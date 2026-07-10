@@ -5,6 +5,10 @@ var version = "v" + require("./package.json").version;
 
 const texturesUrl = "https://github.com/ShyFog/client/releases/download/textures/textures.zip";
 
+function wrap(code) {
+  return `(() => {\n${code}\n})();`;
+}
+
 (async () => {
   if (!fs.existsSync("public/textures")) {
     fs.writeFileSync("textures.zip", Buffer.from(await fetch(texturesUrl).then(res => res.arrayBuffer())));
@@ -14,18 +18,18 @@ const texturesUrl = "https://github.com/ShyFog/client/releases/download/textures
   }
 
   // Bundle all files together
-  var bundle = fs.readFileSync("src/main.js").toString("utf-8").split("%SHYFOG_VERSION%").join(version);
+  var bundle = wrap(fs.readFileSync("src/main.js").toString("utf-8").split("%SHYFOG_VERSION%").join(version));
   for (var file of fs.readdirSync("src")) {
     if (file == "main.js" || file.startsWith(".")) {
       continue;
     }
-    bundle += `\n${fs.readFileSync(`src/${file}`).toString("utf-8")}`;
+    bundle += `\n${wrap(fs.readFileSync(`src/${file}`).toString("utf-8"))}`;
   }
   for (var file of fs.readdirSync("data")) {
     if (file.startsWith(".")) {
       continue;
     }
-    bundle += `\n${fs.readFileSync(`data/${file}`).toString("utf-8")}`;
+    bundle += `\n${wrap(fs.readFileSync(`data/${file}`).toString("utf-8"))}`;
   }
 
   // Minify
