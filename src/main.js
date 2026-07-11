@@ -176,13 +176,14 @@ window.addEventListener("DOMContentLoaded", async () => {
     var mods = await new Promise(res => ZenFS.fs.readdir("/mods", (_, data) => res(data)));
     ShyFog.Client.log("INFO", `ShyFog has identified ${mods.length} mods to load`);
     for (var modFile of mods) {
-      var data = await new Promise(res => ZenFS.fs.readFile(`/mods/${modFile}`, (_, data) => res(data)));
+      var data = (new TextDecoder).decode(await new Promise(res => ZenFS.fs.readFile(`/mods/${modFile}`, (_, data) => res(data))));
       try {
         var mod = JSON.parse(decodeURIComponent(escape(atob(data))));
       } catch {
         ShyFog.Client.log("WARN", `Found a non-mod file ${modFile} in your mods directory. It will now be injected. This could severe stability issues, it should be removed if possible.`);
         try {
           eval(data);
+          continue;
         } catch(err) {
           console.error(err);
           ShyFog.Client.log("FATAL", `Mod "${modFile}" just crashed!`);
