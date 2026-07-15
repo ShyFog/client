@@ -83,9 +83,264 @@ ShyFog.Client.leavesTint = (name, texture, biome) => {
   return ShyFog.Client.tintedTexture(`/dynamic/${name}/${biome}`, texture, color);
 };
 
+ShyFog.Client.getGUIScale = () => {
+  var { guiScale } = ShyFog.Client.settings;
+  if (guiScale == "Auto") {
+    // Auto-detect GUI scale
+    guiScale = 1;
+    while(256 * (guiScale + 1) <= Math.min(ShyFog.Client.canvas.width, ShyFog.Client.canvas.height)) {
+      guiScale++;
+    }
+  } else {
+    guiScale = parseFloat(guiScale.slice(1));
+  }
+  return guiScale;
+};
+
+ShyFog.Client.getCameraPosition = () => {
+  var { blockSize } = ShyFog.Client.settings;
+  var currentUser = ShyFog.Client.players[ShyFog.Client.user.username];
+  var cameraX = (ShyFog.Client.canvas.width / 2) - (ShyFog.Client.bigToNumber(currentUser.x) * blockSize) - (blockSize / 2);
+  var cameraY = (ShyFog.Client.canvas.height / 2) - (ShyFog.Client.bigToNumber(currentUser.y) * -blockSize) - blockSize;
+  return [ cameraX, cameraY ];
+};
+
+ShyFog.Client.renderVoid = () => {
+  var { canvas, context: ctx } = ShyFog.Client;
+  var { blockSize } = ShyFog.Client.settings;
+  var [ cameraX, cameraY ] = ShyFog.Client.getCameraPosition();
+  if (ShyFog.Client.worldMetadata.void) {
+    var voidY = (-ShyFog.Client.worldMetadata.voidY * blockSize) + cameraY;
+    if (voidY < 0) {
+      voidY = 0;
+    }
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, voidY, canvas.width, canvas.height);
+  }
+};
+
+ShyFog.Client.renderPlayer = username => {
+  var { context: ctx } = ShyFog.Client;
+  var { blockSize } = ShyFog.Client.settings;
+  var [ cameraX, cameraY ] = ShyFog.Client.getCameraPosition();
+  if (!ShyFog.Client.hasTexture(`/skin/${username}`)) {
+    ShyFog.Client.saveTexture(`/skin/${username}`, ShyFog.Client.players[username].skin);
+  }
+  if (ShyFog.Client.players[username].gamemode == "spectator") {
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 8, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+    ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 40, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+    ctx.restore();
+  } else if (ShyFog.Client.players[username].direction == "none") {
+    ctx.fillStyle = "#000000";
+    ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+    ctx.fillRect(ShyFog.Client.players[username].x * blockSize + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+    ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 2, blockSize / 4 * 3);
+    ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4 * 3) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+    ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+    ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 2) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+    ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 8, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+    ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 40, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+    ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 44, 20, 4, 12, ShyFog.Client.players[username].x * blockSize + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+    ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 20, 20, 8, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 2, blockSize / 4 * 3);
+    ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 36, 52, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4 * 3) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+    ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 4, 20, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+    ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 20, 52, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 2) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+  } else if (ShyFog.Client.players[username].direction == "left") {
+    ctx.fillStyle = "#000000";
+    ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+    ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+    ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+    ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 16, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+    ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 40, 52, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+    ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 24, 52, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+  } else if (ShyFog.Client.players[username].direction == "right") {
+    ctx.fillStyle = "#000000";
+    ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+    ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+    ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+    ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 0, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
+    ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 40, 20, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
+    ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 0, 20, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
+  }
+  if (ShyFog.Client.debugModeHitboxes && !ShyFog.Client.worldMetadata.reducedDebugInfo) {
+    ctx.strokeStyle = "#ffffff";
+    for (var hitbox of ShyFog.Client.players[username].hitboxes) {
+      ctx.beginPath();
+      ctx.moveTo(ShyFog.Client.bigToNumber(ShyFog.Client.players[username].x.add(hitbox.x).mul(blockSize).add(cameraX)), ShyFog.Client.players[username].y.add(hitbox.y).mul(-blockSize).add(cameraY));
+      ctx.lineTo(ShyFog.Client.bigToNumber(ShyFog.Client.players[username].x.add(hitbox.x).add(hitbox.width).mul(blockSize).add(cameraX)), ShyFog.Client.players[username].y.add(hitbox.y).mul(-blockSize).add(cameraY));
+      ctx.lineTo(ShyFog.Client.bigToNumber(ShyFog.Client.players[username].x.add(hitbox.x).add(hitbox.width).mul(blockSize).add(cameraX)), ShyFog.Client.players[username].y.add(hitbox.y).mul(-blockSize).add(hitbox.height * blockSize).add(cameraY));
+      ctx.lineTo(ShyFog.Client.bigToNumber(ShyFog.Client.players[username].x.add(hitbox.x).mul(blockSize).add(cameraX)), ShyFog.Client.players[username].y.add(hitbox.y).mul(-blockSize).add(hitbox.height * blockSize).add(cameraY));
+      ctx.lineTo(ShyFog.Client.bigToNumber(ShyFog.Client.players[username].x.add(hitbox.x).mul(blockSize).add(cameraX)), ShyFog.Client.players[username].y.add(hitbox.y).mul(-blockSize).add(cameraY));
+      ctx.stroke();
+    }
+  }
+};
+
+ShyFog.Client.shouldShowPlayerNametag = username => {
+  if (ShyFog.Client.players[username].gamemode == "spectator") {
+    return false;
+  }
+  return (ShyFog.Client.settings.showOwnNametag == "ON" || username != ShyFog.Client.user.username);
+};
+
+ShyFog.Client.renderPlayerNametag = username => {
+  var { context: ctx } = ShyFog.Client;
+  var { blockSize } = ShyFog.Client.settings;
+  var [ cameraX, cameraY ] = ShyFog.Client.getCameraPosition();
+  ctx.textAlign = "center";
+  ctx.font = `${blockSize * 0.3125}px Minecraft`;
+  ctx.fillStyle = "#000000";
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 2) + cameraX - (ctx.measureText(username).width / 2) - 4, (ShyFog.Client.players[username].y * -blockSize) - blockSize - (blockSize / 4) + cameraY - 12, ctx.measureText(username).width + 8, 15);
+  ctx.restore();
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(username, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 2) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize - (blockSize / 4) + cameraY);
+};
+
+ShyFog.Client.renderVignette = () => {
+  var { canvas, context: ctx } = ShyFog.Client;
+  var g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  g.addColorStop(0, "rgba(0,0,0,0)");
+  g.addColorStop(0.72, "rgba(0,0,0,0)");
+  g.addColorStop(1, "rgba(0,0,0,1)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  var g2 = ctx.createRadialGradient(
+    canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.3,
+    canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) * 0.75
+  );
+  g2.addColorStop(0, "rgba(0,0,0,0)");
+  g2.addColorStop(0.9, "rgba(0,0,0,1)");
+  ctx.fillStyle = g2;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+};
+
+ShyFog.Client.renderHealth = () => {
+  var { canvas, context: ctx } = ShyFog.Client;
+  var guiScale = ShyFog.Client.getGUIScale();
+  var currentUser = ShyFog.Client.players[ShyFog.Client.user.username];
+  var hotbarTexture = ShyFog.Client.getTexture("/gui/sprites/hud/hotbar.png");
+  var experienceBarTexture = ShyFog.Client.getTexture("/gui/sprites/hud/experience_bar_background.png");
+  var heartContainerTexture = ShyFog.Client.getTexture("/gui/sprites/hud/heart/container.png");
+  var halfHeartTexture = ShyFog.Client.getTexture("/gui/sprites/hud/heart/half.png");
+  var fullHeartTexture = ShyFog.Client.getTexture("/gui/sprites/hud/heart/full.png");
+
+  for (var i = 0; i < currentUser.maxHealth; i += 2) {
+    var x = i % 20;
+    var y = Math.floor(i / 20);
+    ctx.drawImage(heartContainerTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (x / 2 * heartContainerTexture.width * guiScale) - (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (heartContainerTexture.height * guiScale) - (y * heartContainerTexture.height * guiScale), heartContainerTexture.width * guiScale, heartContainerTexture.height * guiScale);
+  }
+  for (var i = 0; i < Math.min(currentUser.health, currentUser.maxHealth); i += 2) {
+    var x = i % 20;
+    var y = Math.floor(i / 20);
+    if (currentUser.health % 2 && i == currentUser.health - 1) {
+      ctx.drawImage(halfHeartTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (x / 2 * halfHeartTexture.width * guiScale) - (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (halfHeartTexture.height * guiScale) - (y * halfHeartTexture.height * guiScale), halfHeartTexture.width * guiScale, halfHeartTexture.height * guiScale);
+    } else {
+      ctx.drawImage(fullHeartTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (x / 2 * fullHeartTexture.width * guiScale) - (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (fullHeartTexture.height * guiScale) - (y * fullHeartTexture.height * guiScale), fullHeartTexture.width * guiScale, fullHeartTexture.height * guiScale);
+    }
+  }
+};
+
+ShyFog.Client.renderHunger = () => {
+  var { canvas, context: ctx } = ShyFog.Client;
+  var guiScale = ShyFog.Client.getGUIScale();
+  var currentUser = ShyFog.Client.players[ShyFog.Client.user.username];
+  var hotbarTexture = ShyFog.Client.getTexture("/gui/sprites/hud/hotbar.png");
+  var experienceBarTexture = ShyFog.Client.getTexture("/gui/sprites/hud/experience_bar_background.png");
+  var emptyFoodTexture = ShyFog.Client.getTexture("/gui/sprites/hud/food_empty.png");
+  var halfFoodTexture = ShyFog.Client.getTexture("/gui/sprites/hud/food_half.png");
+  var fullFoodTexture = ShyFog.Client.getTexture("/gui/sprites/hud/food_full.png");
+
+  for (var i = 0; i < currentUser.maxFood; i += 2) {
+    var x = i % 20;
+    var y = Math.floor(i / 20);
+    ctx.drawImage(emptyFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - (((x / 2) + 1) * emptyFoodTexture.width * guiScale) + (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (emptyFoodTexture.height * guiScale) - (y * emptyFoodTexture.height * guiScale), emptyFoodTexture.width * guiScale, emptyFoodTexture.height * guiScale);
+  }
+  for (var i = 0; i < Math.min(currentUser.food, currentUser.maxFood); i += 2) {
+    var x = i % 20;
+    var y = Math.floor(i / 20);
+    if (currentUser.food % 2 && i == currentUser.food - 1) {
+      ctx.drawImage(halfFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - (((x / 2) + 1) * halfFoodTexture.width * guiScale) + (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (halfFoodTexture.height * guiScale) - (y * halfFoodTexture.height * guiScale), halfFoodTexture.width * guiScale, halfFoodTexture.height * guiScale);
+    } else {
+      ctx.drawImage(fullFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - (((x / 2) + 1) * fullFoodTexture.width * guiScale) + (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (fullFoodTexture.height * guiScale) - (y * fullFoodTexture.height * guiScale), fullFoodTexture.width * guiScale, fullFoodTexture.height * guiScale);
+    }
+  }
+};
+
+ShyFog.Client.renderExperienceBar = () => {
+  var { canvas, context: ctx } = ShyFog.Client;
+  var guiScale = ShyFog.Client.getGUIScale();
+  var hotbarTexture = ShyFog.Client.getTexture("/gui/sprites/hud/hotbar.png");
+  var experienceBarTexture = ShyFog.Client.getTexture("/gui/sprites/hud/experience_bar_background.png");
+
+  ctx.drawImage(experienceBarTexture, (canvas.width / 2) - (experienceBarTexture.width * guiScale / 2), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale), experienceBarTexture.width * guiScale, experienceBarTexture.height * guiScale);
+};
+
+ShyFog.Client.renderHotbar = biome => {
+  var { canvas, context: ctx } = ShyFog.Client;
+  var guiScale = ShyFog.Client.getGUIScale();
+  var currentUser = ShyFog.Client.players[ShyFog.Client.user.username];
+  var hotbarTexture = ShyFog.Client.getTexture("/gui/sprites/hud/hotbar.png");
+  var hotbarSelectionTexture = ShyFog.Client.getTexture("/gui/sprites/hud/hotbar_selection.png");
+
+  ctx.drawImage(hotbarTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2), canvas.height - (hotbarTexture.height * guiScale), hotbarTexture.width * guiScale, hotbarTexture.height * guiScale);
+  for (var hotbarIndex = 0; hotbarIndex < 9; hotbarIndex++) {
+    var hotbarItem = currentUser.slots[`hotbar.${hotbarIndex}`];
+    if (hotbarItem) {
+      var texture = ShyFog.Client.items[hotbarItem.item]({ biome }).texture[0];
+      ctx.drawImage(ShyFog.Client.getTexture(texture.file), (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (20 * guiScale * hotbarIndex) + (6 * guiScale), canvas.height - (hotbarTexture.height * guiScale) + (6 * guiScale), 10 * guiScale, 10 * guiScale);
+      if (hotbarItem.count > 1) {
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "end";
+        ctx.font = `${7 * guiScale}px Minecraft`;
+        ctx.fillText(hotbarItem.count.toString(), (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (20 * guiScale * hotbarIndex) + (19 * guiScale), canvas.height - (hotbarTexture.height * guiScale) + (18 * guiScale));
+      }
+    }
+  }
+
+  // Hotbar selector
+  ctx.drawImage(hotbarSelectionTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (20 * guiScale * currentUser.selectedHotbarSlot) - guiScale, canvas.height - (hotbarTexture.height * guiScale) - guiScale, hotbarSelectionTexture.width * guiScale, hotbarSelectionTexture.height * guiScale);
+};
+
+ShyFog.Client.renderHUD = biome => {
+  var currentUser = ShyFog.Client.players[ShyFog.Client.user.username];
+  if (currentUser.gamemode == "survival" || currentUser.gamemode == "adventure") {
+    ShyFog.Client.renderHealth();
+    ShyFog.Client.renderHunger();
+    ShyFog.Client.renderExperienceBar();
+  }
+  ShyFog.Client.renderHotbar(biome);
+};
+
+ShyFog.Client.renderChat = () => {
+  var { canvas, context: ctx } = ShyFog.Client;
+  var guiScale = ShyFog.Client.getGUIScale();
+  var hotbarTexture = ShyFog.Client.getTexture("/gui/sprites/hud/hotbar.png");
+  var experienceBarTexture = ShyFog.Client.getTexture("/gui/sprites/hud/experience_bar_background.png");
+  var heartContainerTexture = ShyFog.Client.getTexture("/gui/sprites/hud/heart/container.png");
+  var chatMessages = ShyFog.Client.chatMessages.filter(message => Date.now() - message.time <= 12000);
+  const chatScale = 5;
+  const chatWidth = 0.3;
+  ctx.textAlign = "start";
+  ctx.font = `${chatScale * guiScale}px Minecraft`;
+  ctx.fillStyle = "#000000";
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  ctx.fillRect(0, canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (heartContainerTexture.height * guiScale) - (chatScale * guiScale) - (2 * guiScale) - ((chatScale + 4) * guiScale * (chatMessages.length - 1)), canvas.width * chatWidth, (chatScale + 4) * guiScale * chatMessages.length);
+  ctx.restore();
+  for (var messageIndex = 0; messageIndex < chatMessages.length; messageIndex++) {
+    var message = chatMessages[messageIndex];
+    ctx.fillStyle = (message.color || "#ffffff");
+    ctx.fillText(message.content, 10, canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (heartContainerTexture.height * guiScale) - ((chatScale + 4) * guiScale * (chatMessages.length - messageIndex - 1)));
+  }
+};
+
 ShyFog.Client.render = () => {
   var { canvas, context: ctx } = ShyFog.Client;
-  var { blockSize, renderDistance, antiAliasing, guiScale, showOwnNametag, vignette } = ShyFog.Client.settings;
+  var { blockSize, renderDistance, antiAliasing } = ShyFog.Client.settings;
   if (antiAliasing == "OFF") {
     antiAliasing = 1;
   } else {
@@ -94,15 +349,7 @@ ShyFog.Client.render = () => {
   if (!canvas || !ctx) {
     return;
   }
-  if (guiScale == "Auto") {
-    // Auto-detect GUI scale
-    guiScale = 1;
-    while(256 * (guiScale + 1) <= Math.min(canvas.width, canvas.height)) {
-      guiScale++;
-    }
-  } else {
-    guiScale = parseFloat(guiScale.slice(1));
-  }
+  var guiScale = ShyFog.Client.getGUIScale();
 
   // Global settings
   ctx.imageSmoothingEnabled = false;
@@ -144,75 +391,13 @@ ShyFog.Client.render = () => {
 
   ShyFog.Client.physics();
 
-  // Lock camera on the player
-  var cameraX = (canvas.width / 2) - (currentUser.x * blockSize) - (blockSize / 2);
-  var cameraY = (canvas.height / 2) - (currentUser.y * -blockSize) - blockSize;
+  var [ cameraX, cameraY ] = ShyFog.Client.getCameraPosition();
 
-  // Render void
-  if (ShyFog.Client.worldMetadata.void) {
-    var voidY = (-ShyFog.Client.worldMetadata.voidY * blockSize) + cameraY;
-    if (voidY < 0) {
-      voidY = 0;
-    }
-    ctx.fillStyle = "#000000";
-    ctx.fillRect(0, voidY, canvas.width, canvas.height);
-  }
+  ShyFog.Client.renderVoid();
 
   // Render players
   for (var username in ShyFog.Client.players) {
-    if (!ShyFog.Client.hasTexture(`/skin/${username}`)) {
-      ShyFog.Client.saveTexture(`/skin/${username}`, ShyFog.Client.players[username].skin);
-    }
-    if (ShyFog.Client.players[username].gamemode == "spectator") {
-      ctx.save();
-      ctx.globalAlpha = 0.5;
-      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 8, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 40, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.restore();
-    } else if (ShyFog.Client.players[username].direction == "none") {
-      ctx.fillStyle = "#000000";
-      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.fillRect(ShyFog.Client.players[username].x * blockSize + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 2, blockSize / 4 * 3);
-      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4 * 3) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 2) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 8, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 40, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 44, 20, 4, 12, ShyFog.Client.players[username].x * blockSize + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 20, 20, 8, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 2, blockSize / 4 * 3);
-      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 36, 52, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4 * 3) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 4, 20, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 20, 52, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 2) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
-    } else if (ShyFog.Client.players[username].direction == "left") {
-      ctx.fillStyle = "#000000";
-      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 16, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 40, 52, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 24, 52, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
-    } else if (ShyFog.Client.players[username].direction == "right") {
-      ctx.fillStyle = "#000000";
-      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 0, 8, 8, 8, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize + cameraY, blockSize / 2, blockSize / 2);
-      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 40, 20, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - (blockSize / 2) + cameraY, blockSize / 4, blockSize / 4 * 3);
-      ctx.drawImage(ShyFog.Client.getTexture(`/skin/${username}`), 0, 20, 4, 12, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 4) + (blockSize / 8) + cameraX, (ShyFog.Client.players[username].y * -blockSize) + (blockSize / 4) + cameraY, blockSize / 4, blockSize / 4 * 3);
-    }
-    if (ShyFog.Client.debugModeHitboxes && !ShyFog.Client.worldMetadata.reducedDebugInfo) {
-      ctx.strokeStyle = "#ffffff";
-      for (var hitbox of ShyFog.Client.players[username].hitboxes) {
-        ctx.beginPath();
-        ctx.moveTo(ShyFog.Client.bigToNumber(ShyFog.Client.players[username].x.add(hitbox.x).mul(blockSize).add(cameraX)), ShyFog.Client.players[username].y.add(hitbox.y).mul(-blockSize).add(cameraY));
-        ctx.lineTo(ShyFog.Client.bigToNumber(ShyFog.Client.players[username].x.add(hitbox.x).add(hitbox.width).mul(blockSize).add(cameraX)), ShyFog.Client.players[username].y.add(hitbox.y).mul(-blockSize).add(cameraY));
-        ctx.lineTo(ShyFog.Client.bigToNumber(ShyFog.Client.players[username].x.add(hitbox.x).add(hitbox.width).mul(blockSize).add(cameraX)), ShyFog.Client.players[username].y.add(hitbox.y).mul(-blockSize).add(hitbox.height * blockSize).add(cameraY));
-        ctx.lineTo(ShyFog.Client.bigToNumber(ShyFog.Client.players[username].x.add(hitbox.x).mul(blockSize).add(cameraX)), ShyFog.Client.players[username].y.add(hitbox.y).mul(-blockSize).add(hitbox.height * blockSize).add(cameraY));
-        ctx.lineTo(ShyFog.Client.bigToNumber(ShyFog.Client.players[username].x.add(hitbox.x).mul(blockSize).add(cameraX)), ShyFog.Client.players[username].y.add(hitbox.y).mul(-blockSize).add(cameraY));
-        ctx.stroke();
-      }
-    }
+    ShyFog.Client.renderPlayer(username);
   }
 
   // Render blocks in chunks around the player
@@ -280,35 +465,14 @@ ShyFog.Client.render = () => {
 
   // Render player nametags
   for (var username in ShyFog.Client.players) {
-    if ((showOwnNametag == "ON" || username != ShyFog.Client.user.username) && ShyFog.Client.players[username].gamemode != "spectator") {
-      ctx.textAlign = "center";
-      ctx.font = `${blockSize * 0.3125}px Minecraft`;
-      ctx.fillStyle = "#000000";
-      ctx.save();
-      ctx.globalAlpha = 0.5;
-      ctx.fillRect((ShyFog.Client.players[username].x * blockSize) + (blockSize / 2) + cameraX - (ctx.measureText(username).width / 2) - 4, (ShyFog.Client.players[username].y * -blockSize) - blockSize - (blockSize / 4) + cameraY - 12, ctx.measureText(username).width + 8, 15);
-      ctx.restore();
-      ctx.fillStyle = "#ffffff";
-      ctx.fillText(username, (ShyFog.Client.players[username].x * blockSize) + (blockSize / 2) + cameraX, (ShyFog.Client.players[username].y * -blockSize) - blockSize - (blockSize / 4) + cameraY);
+    if (ShyFog.Client.shouldShowPlayerNametag(username)) {
+      ShyFog.Client.renderPlayerNametag(username);
     }
   }
 
   // Vignette effect
-  if (vignette == "ON") {
-    var g = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    g.addColorStop(0, "rgba(0,0,0,0)");
-    g.addColorStop(0.72, "rgba(0,0,0,0)");
-    g.addColorStop(1, "rgba(0,0,0,1)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    var g2 = ctx.createRadialGradient(
-      canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.3,
-      canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) * 0.75
-    );
-    g2.addColorStop(0, "rgba(0,0,0,0)");
-    g2.addColorStop(0.9, "rgba(0,0,0,1)");
-    ctx.fillStyle = g2;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  if (ShyFog.Client.settings.vignette == "ON") {
+    ShyFog.Client.renderVignette();
   }
 
   var blockCursorX = (ShyFog.Client.cursorX - cameraX) / blockSize;
@@ -424,89 +588,10 @@ ShyFog.Client.render = () => {
 
   // HUD
   if (!ShyFog.Client.hideOverlays && currentUser.gamemode != "spectator") {
-    var heartContainerTexture = ShyFog.Client.getTexture("/gui/sprites/hud/heart/container.png");
-    var halfHeartTexture = ShyFog.Client.getTexture("/gui/sprites/hud/heart/half.png");
-    var fullHeartTexture = ShyFog.Client.getTexture("/gui/sprites/hud/heart/full.png");
-    var emptyFoodTexture = ShyFog.Client.getTexture("/gui/sprites/hud/food_empty.png");
-    var halfFoodTexture = ShyFog.Client.getTexture("/gui/sprites/hud/food_half.png");
-    var fullFoodTexture = ShyFog.Client.getTexture("/gui/sprites/hud/food_full.png");
-    var experienceBarTexture = ShyFog.Client.getTexture("/gui/sprites/hud/experience_bar_background.png");
-    var hotbarTexture = ShyFog.Client.getTexture("/gui/sprites/hud/hotbar.png");
-    var hotbarSelectionTexture = ShyFog.Client.getTexture("/gui/sprites/hud/hotbar_selection.png");
-
-    if (currentUser.gamemode == "survival" || currentUser.gamemode == "adventure") {
-      // Health
-      for (var i = 0; i < currentUser.maxHealth; i += 2) {
-        var x = i % 20;
-        var y = Math.floor(i / 20);
-        ctx.drawImage(heartContainerTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (x / 2 * heartContainerTexture.width * guiScale) - (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (heartContainerTexture.height * guiScale) - (y * heartContainerTexture.height * guiScale), heartContainerTexture.width * guiScale, heartContainerTexture.height * guiScale);
-      }
-      for (var i = 0; i < Math.min(currentUser.health, currentUser.maxHealth); i += 2) {
-        var x = i % 20;
-        var y = Math.floor(i / 20);
-        if (currentUser.health % 2 && i == currentUser.health - 1) {
-          ctx.drawImage(halfHeartTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (x / 2 * halfHeartTexture.width * guiScale) - (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (halfHeartTexture.height * guiScale) - (y * halfHeartTexture.height * guiScale), halfHeartTexture.width * guiScale, halfHeartTexture.height * guiScale);
-        } else {
-          ctx.drawImage(fullHeartTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (x / 2 * fullHeartTexture.width * guiScale) - (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (fullHeartTexture.height * guiScale) - (y * fullHeartTexture.height * guiScale), fullHeartTexture.width * guiScale, fullHeartTexture.height * guiScale);
-        }
-      }
-
-      // Hunger
-      for (var i = 0; i < currentUser.maxFood; i += 2) {
-        var x = i % 20;
-        var y = Math.floor(i / 20);
-        ctx.drawImage(emptyFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - (((x / 2) + 1) * emptyFoodTexture.width * guiScale) + (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (emptyFoodTexture.height * guiScale) - (y * emptyFoodTexture.height * guiScale), emptyFoodTexture.width * guiScale, emptyFoodTexture.height * guiScale);
-      }
-      for (var i = 0; i < Math.min(currentUser.food, currentUser.maxFood); i += 2) {
-        var x = i % 20;
-        var y = Math.floor(i / 20);
-        if (currentUser.food % 2 && i == currentUser.food - 1) {
-          ctx.drawImage(halfFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - (((x / 2) + 1) * halfFoodTexture.width * guiScale) + (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (halfFoodTexture.height * guiScale) - (y * halfFoodTexture.height * guiScale), halfFoodTexture.width * guiScale, halfFoodTexture.height * guiScale);
-        } else {
-          ctx.drawImage(fullFoodTexture, (canvas.width / 2) + (hotbarTexture.width * guiScale / 2) - (((x / 2) + 1) * fullFoodTexture.width * guiScale) + (x / 2 * guiScale), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (fullFoodTexture.height * guiScale) - (y * fullFoodTexture.height * guiScale), fullFoodTexture.width * guiScale, fullFoodTexture.height * guiScale);
-        }
-      }
-
-      // Experience bar
-      ctx.drawImage(experienceBarTexture, (canvas.width / 2) - (experienceBarTexture.width * guiScale / 2), canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale), experienceBarTexture.width * guiScale, experienceBarTexture.height * guiScale);
-    }
-
-    // Hotbar
-    ctx.drawImage(hotbarTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2), canvas.height - (hotbarTexture.height * guiScale), hotbarTexture.width * guiScale, hotbarTexture.height * guiScale);
-    for (var hotbarIndex = 0; hotbarIndex < 9; hotbarIndex++) {
-      var hotbarItem = currentUser.slots[`hotbar.${hotbarIndex}`];
-      if (hotbarItem) {
-        var texture = ShyFog.Client.items[hotbarItem.item]({ biome }).texture[0];
-        ctx.drawImage(ShyFog.Client.getTexture(texture.file), (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (20 * guiScale * hotbarIndex) + (6 * guiScale), canvas.height - (hotbarTexture.height * guiScale) + (6 * guiScale), 10 * guiScale, 10 * guiScale);
-        if (hotbarItem.count > 1) {
-          ctx.fillStyle = "#ffffff";
-          ctx.textAlign = "end";
-          ctx.font = `${7 * guiScale}px Minecraft`;
-          ctx.fillText(hotbarItem.count.toString(), (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (20 * guiScale * hotbarIndex) + (19 * guiScale), canvas.height - (hotbarTexture.height * guiScale) + (18 * guiScale));
-        }
-      }
-    }
-
-    // Hotbar selector
-    ctx.drawImage(hotbarSelectionTexture, (canvas.width / 2) - (hotbarTexture.width * guiScale / 2) + (20 * guiScale * currentUser.selectedHotbarSlot) - guiScale, canvas.height - (hotbarTexture.height * guiScale) - guiScale, hotbarSelectionTexture.width * guiScale, hotbarSelectionTexture.height * guiScale); 
+    ShyFog.Client.renderHUD(biome);
   }
 
-  // Chat
-  var chatMessages = ShyFog.Client.chatMessages.filter(message => Date.now() - message.time <= 12000);
-  const chatScale = 5;
-  const chatWidth = 0.3;
-  ctx.textAlign = "start";
-  ctx.font = `${chatScale * guiScale}px Minecraft`;
-  ctx.fillStyle = "#000000";
-  ctx.save();
-  ctx.globalAlpha = 0.5;
-  ctx.fillRect(0, canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (heartContainerTexture.height * guiScale) - (chatScale * guiScale) - (2 * guiScale) - ((chatScale + 4) * guiScale * (chatMessages.length - 1)), canvas.width * chatWidth, (chatScale + 4) * guiScale * chatMessages.length);
-  ctx.restore();
-  for (var messageIndex = 0; messageIndex < chatMessages.length; messageIndex++) {
-    var message = chatMessages[messageIndex];
-    ctx.fillStyle = (message.color || "#ffffff");
-    ctx.fillText(message.content, 10, canvas.height - (hotbarTexture.height * guiScale) - 5 - (experienceBarTexture.height * guiScale) - 5 - (heartContainerTexture.height * guiScale) - ((chatScale + 4) * guiScale * (chatMessages.length - messageIndex - 1)));
-  }
+  ShyFog.Client.renderChat();
 
   if (currentUser.currentGUI) {
     ctx.fillStyle = "rgba(0, 0, 0, 0.5)";

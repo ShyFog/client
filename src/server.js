@@ -33,36 +33,45 @@ ShyFog.Client.sendPacket = (...packet) => {
   }
 };
 
-ShyFog.Client.handlePacket = async (message) => {
-  var msg = null;
-  if (message.data instanceof Blob) {
+ShyFog.Client.decodePacket = async data => {
+  var packet = null;
+  if (data instanceof Blob) {
     try {
-      msg = JSON.parse("[" + pako.inflate(await message.data.arrayBuffer(), {
+      packet = JSON.parse("[" + pako.inflate(await data.arrayBuffer(), {
         "to": "string"
       }) + "]");
     } catch {
-      return;
+      return null;
     }
   } else {
-    if (message.data.startsWith("PONG")) {
-      ShyFog.Client.measuredPing = (Date.now() - parseInt(message.data.slice(4)));
+    if (data.startsWith("PONG")) {
+      ShyFog.Client.measuredPing = (Date.now() - parseInt(data.slice(4)));
+      return null;
     }
     try {
-      msg = JSON.parse(`[${message.data}]`);
+      packet = JSON.parse(`[${data}]`);
     } catch {
-      return;
+      return null;
     }
   }
-  if (!Array.isArray(msg) || !msg.length) {
+  if (!Array.isArray(packet) || !packet.length || typeof packet[0] !== "number") {
+    return null;
+  }
+  return packet;
+};
+
+ShyFog.Client.handlePacket = async message => {
+  var packet = await ShyFog.Client.decodePacket(message.data);
+  if (!packet) {
     return;
   }
-  var [ op, ...data ] = msg;
+  var [ op, ...data ] = packet;
   if (op == ShyFog.Client.PacketType.REQUIRE_AUTH) {
     document.querySelector("#main-menu").innerHTML = `
       <font size="4">Encrypting...</font>
     `;
     if (!ShyFog.Client.user.token) {
-      return sendPacket(PacketType.JOIN, {
+      return sendPacket(ShyFog.Client.PacketType.JOIN, {
         "version": ShyFog.Client.version,
         "sessionToken": null
       });
