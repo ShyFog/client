@@ -111,11 +111,11 @@ ShyFog.Client.handlePacket = async message => {
     ShyFog.Client.worldMetadata = Object.assign(ShyFog.Client.worldMetadata, data[0]);
   }
   if (op == ShyFog.Client.PacketType.PLAYER_METADATA) {
-    ShyFog.Client.players[data[0]] = Object.assign(ShyFog.Client.players[data[0]] || {}, data[1]);
+    ShyFog.Client.players.set(data[0], Object.assign(ShyFog.Client.players.get(data[0]) || {}, data[1]));
     if (typeof data[1].x === "string" || typeof data[1].y === "string" || typeof data[1].z === "string") {
-      ShyFog.Client.players[data[0]].x = new Big(ShyFog.Client.players[data[0]].x);
-      ShyFog.Client.players[data[0]].y = new Big(ShyFog.Client.players[data[0]].y);
-      ShyFog.Client.players[data[0]].z = new Big(ShyFog.Client.players[data[0]].z);
+      ShyFog.Client.players.get(data[0]).x = new Big(ShyFog.Client.players.get(data[0]).x);
+      ShyFog.Client.players.get(data[0]).y = new Big(ShyFog.Client.players.get(data[0]).y);
+      ShyFog.Client.players.get(data[0]).z = new Big(ShyFog.Client.players.get(data[0]).z);
     }
   }
   if (op == ShyFog.Client.PacketType.CHUNKS) {
@@ -129,7 +129,7 @@ ShyFog.Client.handlePacket = async message => {
     ShyFog.Client.chunks[`${data[0]},${data[1]},${data[2]}`].push(data[3]);
   }
   if (op == ShyFog.Client.PacketType.PLAYER_DISCONNECTED) {
-    delete ShyFog.Client.players[data[0]];
+    ShyFog.Client.players.delete(data[0]);
   }
   if (op == ShyFog.Client.PacketType.SERVER_TRANSFER) {
     ShyFog.Client.log("INFO", `Transferring to ${data[0]}`);

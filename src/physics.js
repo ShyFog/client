@@ -7,7 +7,7 @@ ShyFog.Client.defaultValues.coyoteTime = -Infinity;
 ShyFog.Client.resetState();
 
 ShyFog.Client.physics = () => {
-  var currentUser = ShyFog.Client.players[ShyFog.Client.user.username];
+  var currentUser = ShyFog.Client.players.get(ShyFog.Client.user.username);
   var playerSpeed = (currentUser.walkSpeed * ShyFog.Client.deltaTime);
   if (ShyFog.Client.holdingKeys.get("ShiftLeft")) {
     playerSpeed = (currentUser.shiftSpeed * ShyFog.Client.deltaTime);

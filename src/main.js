@@ -59,7 +59,7 @@ ShyFog.Client.defaultValues.holdingKeys = new Map;
 ShyFog.Client.defaultValues.worldMetadata = {};
 ShyFog.Client.defaultValues.chunks = {};
 ShyFog.Client.defaultValues.biomes = {};
-ShyFog.Client.defaultValues.players = {};
+ShyFog.Client.defaultValues.players = new Map;
 ShyFog.Client.defaultValues.chatMessages = [];
 ShyFog.Client.resetState();
 

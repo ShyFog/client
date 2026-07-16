@@ -36,7 +36,7 @@ ShyFog.Client.handleMousedown = event => {
     guiScale = parseFloat(guiScale.slice(1));
   }
 
-  var currentUser = ShyFog.Client.players[ShyFog.Client.user.username];
+  var currentUser = ShyFog.Client.players.get(ShyFog.Client.user.username);
   if (currentUser.currentGUI) {
     var currentGUIData = ShyFog.Client.guis[currentUser.currentGUI.id];
     var guiBackground = ShyFog.Client.getTexture(currentGUIData.background);
@@ -69,8 +69,8 @@ window.addEventListener("keydown", () => {
 
   // Esc to pause/resume, but prioritize closing current GUI
   if (event.code == "Escape") {
-    if (ShyFog.Client.players[ShyFog.Client.user.username].currentGUI) {
-      ShyFog.Client.players[ShyFog.Client.user.username].currentGUI = null;
+    if (ShyFog.Client.players.get(ShyFog.Client.user.username).currentGUI) {
+      ShyFog.Client.players.get(ShyFog.Client.user.username).currentGUI = null;
       ShyFog.Client.sendPacket(ShyFog.Client.PacketType.CLOSE_GUI);
     } else {
       ShyFog.Client.paused = !ShyFog.Client.paused;
@@ -87,14 +87,14 @@ window.addEventListener("keydown", () => {
 
   // Hotbar using digits
   if (["Digit1", "Digit2", "Digit3", "Digit4", "Digit5", "Digit6", "Digit7", "Digit8", "Digit9"].includes(event.code)) {
-    ShyFog.Client.players[ShyFog.Client.user.username].selectedHotbarSlot = (parseInt(event.code.slice(5)) - 1);
-    ShyFog.Client.sendPacket(ShyFog.Client.PacketType.HOTBAR_SWITCH, ShyFog.Client.players[ShyFog.Client.user.username].selectedHotbarSlot);
+    ShyFog.Client.players.get(ShyFog.Client.user.username).selectedHotbarSlot = (parseInt(event.code.slice(5)) - 1);
+    ShyFog.Client.sendPacket(ShyFog.Client.PacketType.HOTBAR_SWITCH, ShyFog.Client.players.get(ShyFog.Client.user.username).selectedHotbarSlot);
   }
 
   // E to open inventory/close current GUI
   if (event.code == "KeyE") {
-    if (ShyFog.Client.players[ShyFog.Client.user.username].currentGUI) {
-      ShyFog.Client.players[ShyFog.Client.user.username].currentGUI = null;
+    if (ShyFog.Client.players.get(ShyFog.Client.user.username).currentGUI) {
+      ShyFog.Client.players.get(ShyFog.Client.user.username).currentGUI = null;
       ShyFog.Client.sendPacket(ShyFog.Client.PacketType.CLOSE_GUI);
     } else {
       ShyFog.Client.sendPacket(ShyFog.Client.PacketType.OPEN_INVENTORY);
@@ -146,17 +146,17 @@ window.addEventListener("wheel", event => {
     return;
   }
   var delta = Math.max(-1, Math.min(event.deltaY, 1));
-  if (ShyFog.Client.players[ShyFog.Client.user.username].currentGUI) {
+  if (ShyFog.Client.players.get(ShyFog.Client.user.username).currentGUI) {
     return;
   }
-  ShyFog.Client.players[ShyFog.Client.user.username].selectedHotbarSlot += delta;
-  if (ShyFog.Client.players[ShyFog.Client.user.username].selectedHotbarSlot < 0) {
-    ShyFog.Client.players[ShyFog.Client.user.username].selectedHotbarSlot = 8;
+  ShyFog.Client.players.get(ShyFog.Client.user.username).selectedHotbarSlot += delta;
+  if (ShyFog.Client.players.get(ShyFog.Client.user.username).selectedHotbarSlot < 0) {
+    ShyFog.Client.players.get(ShyFog.Client.user.username).selectedHotbarSlot = 8;
   }
-  if (ShyFog.Client.players[ShyFog.Client.user.username].selectedHotbarSlot > 8) {
-    ShyFog.Client.players[ShyFog.Client.user.username].selectedHotbarSlot = 0;
+  if (ShyFog.Client.players.get(ShyFog.Client.user.username).selectedHotbarSlot > 8) {
+    ShyFog.Client.players.get(ShyFog.Client.user.username).selectedHotbarSlot = 0;
   }
-  ShyFog.Client.sendPacket(ShyFog.Client.PacketType.HOTBAR_SWITCH, ShyFog.Client.players[ShyFog.Client.user.username].selectedHotbarSlot);
+  ShyFog.Client.sendPacket(ShyFog.Client.PacketType.HOTBAR_SWITCH, ShyFog.Client.players.get(ShyFog.Client.user.username).selectedHotbarSlot);
 });
 
 // Fix big delta time if the page was not visible for some time (for example, screenshots)
