@@ -225,7 +225,6 @@ ShyFog.Client.physics = () => {
 
     if (ShyFog.Client.chunks[`${playerChunkX},${playerChunkY},${playerChunkZ}`] && !currentUser.currentGUI && ShyFog.Client.holdingKeys.get("KeyA")) {
       var foundCollision = null;
-      hitboxsearch:
       for (var chunkOffset of [
         [0, 0, 0],
         [-1, 0, 0],
@@ -235,7 +234,7 @@ ShyFog.Client.physics = () => {
         [-1, 1, 0]
       ]) {
         for (var block of ShyFog.Client.chunks[`${playerChunkX + chunkOffset[0]},${playerChunkY + chunkOffset[1]},${playerChunkZ + chunkOffset[2]}`]) {
-          if (!block ) {
+          if (!block) {
             continue;
           }
           for (var hitbox of ShyFog.Client.items[block.block]({}).hitboxes) {
@@ -253,9 +252,8 @@ ShyFog.Client.physics = () => {
                 "y": new Big((chunkOffset[1] * 16) + block.y + hitbox.y + 1),
                 "width": new Big(hitbox.width),
                 "height": new Big(hitbox.height)
-              })) {
+              }) && (!foundCollision || (chunkOffset[0] * 16) + block.x + hitbox.x < (foundCollision.chunkOffset[0] * 16) + foundCollision.block.x + foundCollision.hitbox.x)) {
                 foundCollision = { chunkOffset, block, hitbox, playerHitbox };
-                break hitboxsearch;
               }
             }
           }
@@ -271,7 +269,6 @@ ShyFog.Client.physics = () => {
     }
     if (ShyFog.Client.chunks[`${playerChunkX},${playerChunkY},${playerChunkZ}`] && !currentUser.currentGUI && ShyFog.Client.holdingKeys.get("KeyD")) {
       var foundCollision = null;
-      hitboxsearch:
       for (var chunkOffset of [
         [0, 0, 0],
         [1, 0, 0],
@@ -299,9 +296,8 @@ ShyFog.Client.physics = () => {
                 "y": new Big((chunkOffset[1] * 16) + block.y + hitbox.y + 1),
                 "width": new Big(hitbox.width),
                 "height": new Big(hitbox.height)
-              })) {
+              }) && (!foundCollision || (chunkOffset[0] * 16) + block.x + hitbox.x > (foundCollision.chunkOffset[0] * 16) + foundCollision.block.x + foundCollision.hitbox.x)) {
                 foundCollision = { chunkOffset, block, hitbox, playerHitbox };
-                break hitboxsearch;
               }
             }
           }
