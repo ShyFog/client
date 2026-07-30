@@ -138,8 +138,9 @@ ShyFog.Client.multiplayerMenu = () => {
     if (url.hostname == "localhost") {
       url.protocol = "http:";
     }
+    var portMatch = server.address.split("/")[0].match(/:(\d+)/);
     if (!url.port) {
-      url.port = 6280;
+      url.port = portMatch ? parseInt(portMatch[1]) : 6280;
     }
     try {
       var pingResult = await fetch(`${url.toString()}api/shyfog/ping`);

@@ -162,8 +162,9 @@ ShyFog.Client.connectServer = (address, forceSSL) => {
   if (url.hostname == "localhost") {
     url.protocol = "ws:";
   }
+  var portMatch = address.split("/")[0].match(/:(\d+)/);
   if (!url.port) {
-    url.port = 6280;
+    url.port = portMatch ? parseInt(portMatch[1]) : 6280;
   }
   ShyFog.Client.log("INFO", `Connecting to ${url.hostname}, ${url.port}`);
   ShyFog.Client.resetState();
